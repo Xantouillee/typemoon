@@ -129,6 +129,28 @@ voices cost ~7 kB total and work offline.
 ### Known gap
 Settings-page labels/descriptions are **English only**; the rest of the chrome is EN/FR/ES/DE.
 
+## v2.5 — arcade backdrops — BUILT (pending sign-off)
+Four user-supplied pixel-art GIFs as **arcade-only** backdrops (`public/backgrounds/`).
+Practice mode is deliberately untouched.
+
+- [x] **`ArcadeBackdrop`** — four stacked layers, readability enforced in code rather than
+      left to the image: `cover`-fitted GIF (blurred + desaturated) → flat scrim in the page
+      colour → **radial scrim heaviest at the centre where the words are, lightest at the
+      edges** so the art still reads at the periphery → vignette
+- [x] **Scrim floor** — `MIN_SCRIM = 0.45`; the slider physically cannot reach a value where
+      light-theme text over a bright jungle frame stops being legible
+- [x] **Per-image defaults** — each backdrop declares a `weight` (how hard it fights text);
+      picking one auto-sets the scrim. Downpour 0.62 → Cascades 0.82
+- [x] **`.on-backdrop` text halo** — a paper-coloured `text-shadow` on arcade text, so small
+      type keeps local separation even over the waterfalls' white water
+- [x] **Lazy** — GIFs are static files fetched only when selected; the 1.2 MB jungle costs
+      nothing until chosen. Cards in the picker show the real image under the real scrim
+- [x] **Settings → Arcade** — backdrop picker, Cover slider, Blur slider
+- [ ] **Sign-off** — awaiting user review
+
+Backdrops: `Downpour` (rain city) · `Harbour` (sunset river) · `Campfire` (mountain lake) ·
+`Cascades` (jungle waterfalls). Source files kept in `Image for theme/`.
+
 ### Deferred from the Monkeytype audit
 **Pace caret** (ghost racing your PB/average — their best feature, wants its own pass) ·
 tape mode · funbox modes · font family picker · ~100 preset themes (our two hand-made

@@ -16,6 +16,7 @@ import {
 } from '../arcade/useInkRush';
 import { tensionTier } from '../arcade/scoring';
 import { useSettings } from '../store/settings';
+import { ArcadeBackdrop } from '../components/Arcade/ArcadeBackdrop';
 import { loadWords } from '../lib/content';
 import {
   bestArcadeScore,
@@ -212,7 +213,12 @@ export function ArcadePage() {
   }
 
   return (
-    <div className="relative flex-1 flex flex-col items-center px-6 pb-16">
+    <div
+      className={`relative flex-1 flex flex-col items-center px-6 pb-16 ${
+        s.arcadeBg === 'none' ? '' : 'on-backdrop'
+      }`}
+    >
+      <ArcadeBackdrop id={s.arcadeBg} scrim={s.arcadeScrim} blur={s.arcadeBlur} />
       <div
         className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-500"
         style={{

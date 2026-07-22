@@ -14,6 +14,7 @@ import {
   type SoundThemeId,
 } from '../lib/sound';
 import { t } from '../i18n/strings';
+import { BACKGROUNDS, MAX_SCRIM, MIN_SCRIM, backgroundUrl } from '../lib/backgrounds';
 
 /** A neutral pangram-ish line: every setting has something to act on. */
 const SAMPLE = 'the quick brown fox jumps over the lazy dog and never looks back';
@@ -22,6 +23,7 @@ const SECTIONS = [
   { id: 'sound', title: 'Sound', blurb: 'How the keyboard feels in your ears.' },
   { id: 'typing', title: 'Typing', blurb: 'What counts as a mistake, and what a mistake costs.' },
   { id: 'appearance', title: 'Appearance', blurb: 'How the words and the caret present themselves.' },
+  { id: 'arcade', title: 'Arcade', blurb: 'The backdrop behind Ink Rush and the Anthology.' },
   { id: 'theme', title: 'Theme & language', blurb: 'The look of the page and the words you type.' },
 ];
 
@@ -149,6 +151,62 @@ function VoicePicker() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Backdrop cards, each showing the real GIF behind the real scrim. */
+function BackdropPicker() {
+  const s = useSettings();
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full">
+      {BACKGROUNDS.map((b) => {
+        const active = s.arcadeBg === b.id;
+        return (
+          <button
+            key={b.id}
+            onClick={() => s.setArcadeBg(b.id)}
+            className="relative overflow-hidden rounded-sm text-left transition-all"
+            style={{
+              aspectRatio: '16 / 9',
+              border: `1.5px solid ${active ? 'rgb(var(--accent))' : 'rgb(var(--ink) / 0.14)'}`,
+              background: 'rgb(var(--ink) / 0.04)',
+            }}
+          >
+            {b.file && (
+              <>
+                <img
+                  src={backgroundUrl(b.file)}
+                  alt=""
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full"
+                  style={{ objectFit: 'cover', filter: 'saturate(0.85)' }}
+                />
+                {/* the same cover the arcade will apply, so the card tells the truth */}
+                <div
+                  className="absolute inset-0"
+                  style={{ background: `rgb(var(--paper) / ${b.weight * 0.82})` }}
+                />
+              </>
+            )}
+            <span className="absolute inset-x-0 bottom-0 p-1.5 flex flex-col">
+              <span
+                className="font-display text-[13px] leading-tight"
+                style={{ color: active ? 'rgb(var(--accent))' : 'rgb(var(--ink))' }}
+              >
+                {b.name}
+              </span>
+              <span
+                className="font-mono text-[8.5px] uppercase tracking-[0.08em] truncate"
+                style={{ color: 'rgb(var(--ink-soft))' }}
+              >
+                {b.scene}
+                {b.kb > 0 && ` · ${b.kb} kB`}
+              </span>
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -458,8 +516,45 @@ export function SettingsPage() {
             </Row>
           </Section>
 
-          {/* ---------------- theme ---------------- */}
+          {/* ---------------- arcade ---------------- */}
           <Section {...SECTIONS[3]}>
+            <Row
+              label="Backdrop"
+              hint="A moving scene behind the arcade. Practice mode stays plain — nothing here touches it."
+              wide
+            >
+              <BackdropPicker />
+            </Row>
+            <Row
+              label="Cover"
+              hint="How much of the page colour sits over the image. Raise it if anything is hard to read; it cannot go low enough to make text illegible."
+            >
+              <Slider
+                value={s.arcadeScrim}
+                min={MIN_SCRIM}
+                max={MAX_SCRIM}
+                step={0.05}
+                onChange={(v) => s.set('arcadeScrim', v)}
+                format={(v) => `${Math.round(v * 100)}%`}
+              />
+            </Row>
+            <Row
+              label="Blur"
+              hint="Softens the image so its detail stops competing with the words. At zero the pixel art stays sharp."
+            >
+              <Slider
+                value={s.arcadeBlur}
+                min={0}
+                max={16}
+                step={1}
+                onChange={(v) => s.set('arcadeBlur', v)}
+                format={(v) => `${v}px`}
+              />
+            </Row>
+          </Section>
+
+          {/* ---------------- theme ---------------- */}
+          <Section {...SECTIONS[4]}>
             <Row label="Page theme" hint="Ink on Cream by day, Midnight Ink by night.">
               <Choice
                 groupId="pageTheme"

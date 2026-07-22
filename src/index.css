@@ -130,3 +130,23 @@ body::before {
   font-weight: 600;
   color: rgb(var(--ink-soft));
 }
+
+/* ============================================================
+   Text over an arcade backdrop.
+
+   The scrim handles the average case, but a bright, busy frame (the
+   waterfalls) can still sit directly under small type. A halo in the page
+   colour guarantees local separation whatever the pixel behind it is doing,
+   and costs no layout. Applied to the arcade root only.
+   ============================================================ */
+.on-backdrop :where(h1, h2, h3, p, span, button, div) {
+  text-shadow:
+    0 1px 2px rgb(var(--paper) / 0.95),
+    0 0 10px rgb(var(--paper) / 0.85);
+}
+
+/* Panels keep their own solid ground so the halo never has to do the work. */
+.on-backdrop :where(.panel, [data-panel]) {
+  background: rgb(var(--paper) / 0.82);
+  backdrop-filter: blur(6px);
+}

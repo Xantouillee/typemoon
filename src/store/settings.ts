@@ -7,6 +7,7 @@ import {
   type SoundThemeId,
 } from '../lib/sound';
 import type { Confidence, Difficulty, StopOnError } from '../engine/types';
+import { backgroundMeta, type BackgroundId } from '../lib/backgrounds';
 
 export type Theme = 'light' | 'dark';
 export type Mode = 'time' | 'words' | 'quote' | 'daily' | 'zen';
@@ -56,6 +57,12 @@ interface SettingsState {
   speedUnit: SpeedUnit;
   capsWarning: boolean;
 
+  // arcade backdrop
+  arcadeBg: BackgroundId;
+  /** 0..1 page-colour cover over the image; floored so text stays legible */
+  arcadeScrim: number;
+  arcadeBlur: number;
+
   setTheme: (t: Theme) => void;
   toggleTheme: () => void;
   setLanguage: (l: string) => void;
@@ -66,6 +73,8 @@ interface SettingsState {
   toggleNumbers: () => void;
   toggleSound: () => void;
   setSoundTheme: (t: SoundThemeId) => void;
+  /** Also resets the scrim to a level that suits that image's brightness. */
+  setArcadeBg: (id: BackgroundId) => void;
   /** Any other setting, by key — the settings page drives everything through this. */
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
   reset: () => void;
@@ -100,6 +109,10 @@ const DEFAULTS = {
   fontSize: 1,
   speedUnit: 'wpm' as SpeedUnit,
   capsWarning: true,
+
+  arcadeBg: 'none' as BackgroundId,
+  arcadeScrim: 0.7,
+  arcadeBlur: 3,
 };
 
 export const useSettings = create<SettingsState>()(
@@ -116,6 +129,8 @@ export const useSettings = create<SettingsState>()(
       toggleNumbers: () => set((s) => ({ numbers: !s.numbers })),
       toggleSound: () => set((s) => ({ sound: !s.sound })),
       setSoundTheme: (soundTheme) => set({ soundTheme }),
+      setArcadeBg: (arcadeBg) =>
+        set({ arcadeBg, arcadeScrim: backgroundMeta(arcadeBg).weight || 0.7 }),
       set: (key, value) => {
         if (key === 'soundVolume') setSoundVolume(value as number);
         set({ [key]: value } as Partial<SettingsState>);
