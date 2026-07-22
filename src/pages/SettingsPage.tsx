@@ -19,6 +19,7 @@ import { t, tf } from '../i18n/strings';
 import { copy, type OptId, type SectionId } from '../i18n/copy';
 import { BACKGROUNDS, MAX_SCRIM, MIN_SCRIM, backgroundUrl } from '../lib/backgrounds';
 import { parseMelody } from '../lib/melody';
+import { parseMidi } from '../lib/midi';
 
 /**
  * The preview text, per language.
@@ -258,6 +259,26 @@ function CustomMelody() {
   const s = useSettings();
   const c = copy(s.language);
   const parsed = useMemo(() => parseMelody(s.customMelody), [s.customMelody]);
+  const [dropping, setDropping] = useState(false);
+  const [midiError, setMidiError] = useState<string | null>(null);
+
+  /**
+   * Take a .mid the user chose and turn it into notes. The file is read in the
+   * browser and thrown away — only the note numbers are kept, in local storage.
+   */
+  const takeFile = async (file: File | undefined | null) => {
+    if (!file) return;
+    setMidiError(null);
+    const result = parseMidi(await file.arrayBuffer());
+    if (result.error || result.notes.length === 0) {
+      setMidiError(t(s.language, `midi_${result.error ?? 'no-notes'}`));
+      return;
+    }
+    s.set('customMelody', result.notes.join(' '));
+    s.setSoundTheme('custom');
+    if (!s.sound) s.toggleSound();
+    previewTheme('custom');
+  };
 
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -274,6 +295,44 @@ function CustomMelody() {
           color: 'rgb(var(--ink))',
         }}
       />
+      {/* Drop a file you already have. Reading it is all local — the notes end up
+          in this browser's storage and the file itself is never kept. */}
+      <label
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDropping(true);
+        }}
+        onDragLeave={() => setDropping(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDropping(false);
+          void takeFile(e.dataTransfer.files?.[0]);
+        }}
+        className="flex items-center justify-center gap-2 py-3 rounded-sm cursor-pointer transition-colors text-center"
+        style={{
+          border: `1.5px dashed ${dropping ? 'rgb(var(--accent))' : 'rgb(var(--ink) / 0.2)'}`,
+          background: dropping ? 'rgb(var(--accent) / 0.07)' : 'transparent',
+          color: 'rgb(var(--ink-soft))',
+        }}
+      >
+        <input
+          type="file"
+          accept=".mid,.midi,audio/midi"
+          className="hidden"
+          onChange={(e) => {
+            void takeFile(e.target.files?.[0]);
+            e.target.value = '';
+          }}
+        />
+        <span className="font-sans text-[12.5px]">{c.midiDrop}</span>
+      </label>
+
+      {midiError && (
+        <span className="font-sans text-[12px]" style={{ color: 'rgb(var(--error))' }}>
+          {midiError}
+        </span>
+      )}
+
       <div className="flex items-center gap-3 flex-wrap">
         <button
           onClick={() => {

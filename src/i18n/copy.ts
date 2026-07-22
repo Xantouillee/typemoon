@@ -94,6 +94,7 @@ export interface Copy {
   previewWarning: string;
   previewRestart: string;
   customPlay: string;
+  midiDrop: string;
   sections: Record<SectionId, { title: string; blurb: string }>;
   rows: Record<RowId, RowCopy>;
   opt: Record<OptId, string>;
@@ -111,6 +112,7 @@ const en: Copy = {
   previewWarning: 'That tick is your time warning.',
   previewRestart: 'restart the sample',
   customPlay: 'Play it',
+  midiDrop: 'or drop a MIDI file here — click to browse',
   sections: {
     sound: { title: 'Sound', blurb: 'How the keyboard feels in your ears.' },
     typing: {
@@ -265,6 +267,7 @@ const fr: Copy = {
   previewWarning: 'Ce tic-tac, c’est votre alerte de temps.',
   previewRestart: 'relancer l’exemple',
   customPlay: 'Écouter',
+  midiDrop: 'ou déposez un fichier MIDI ici — cliquez pour parcourir',
   sections: {
     sound: { title: 'Son', blurb: 'Ce que le clavier fait à vos oreilles.' },
     typing: {
@@ -419,6 +422,7 @@ const es: Copy = {
   previewWarning: 'Ese tic es tu aviso de tiempo.',
   previewRestart: 'reiniciar el ejemplo',
   customPlay: 'Escuchar',
+  midiDrop: 'o suelta aquí un archivo MIDI — haz clic para buscar',
   sections: {
     sound: { title: 'Sonido', blurb: 'Cómo suena el teclado en tus oídos.' },
     typing: {
@@ -573,6 +577,7 @@ const de: Copy = {
   previewWarning: 'Dieses Ticken ist deine Zeitwarnung.',
   previewRestart: 'Beispiel neu starten',
   customPlay: 'Anhören',
+  midiDrop: 'oder zieh eine MIDI-Datei hierher — zum Suchen klicken',
   sections: {
     sound: { title: 'Klang', blurb: 'Wie sich die Tastatur in deinen Ohren anfühlt.' },
     typing: {

@@ -277,6 +277,28 @@ Built instead, in the same session:
 22 voices now. `tsc` clean · **86/86** tests (11 new, all on the parser — the `b`
 note vs `b` flat ambiguity is the one place the notation can trip over itself).
 
+## v2.9 — bring your own MIDI — BUILT (pending sign-off)
+The "your own tune" field asked people to hand-type note names. Most tunes worth playing
+already exist as a `.mid` somewhere on disk, so now you can just drop one in.
+
+- [x] **`lib/midi.ts`** — a small standard-MIDI reader written for this one job, not a
+      sequencer. Walks every track, keeps note-ons, drops **channel 10** (percussion would
+      wreck the line), and where several notes land on the same tick keeps the **highest** —
+      in almost all music the top voice is the tune and the rest is accompaniment. Handles
+      running status, VLQ deltas, meta and sysex events; picks up the track name as a label.
+      Never throws: an unreadable file comes back as a typed `error`, not an exception.
+- [x] **Drop zone** in Settings → Sound, next to the note-name field. Dropping a file fills
+      the field, switches to the `custom` voice, unmutes if needed, and auditions it.
+- [x] **Local, always.** The file is read with `arrayBuffer()` in the browser; only the note
+      offsets reach `localStorage`, and the file itself is discarded. Nothing uploaded,
+      nothing committed — this is exactly the escape hatch from the licensing decision.
+      Whatever tune you drop is your business; what Typemoon *ships* stays public domain.
+- [x] **Errors say which** (`not-midi` / `no-notes` / `unreadable`), translated EN/FR/ES/DE.
+- [x] **11 parser tests** — header/track walking, running status, chord-collapse, drum-channel
+      rejection, zero-velocity note-offs, junk input.
+
+Gates: `tsc -b` clean · **97/97** tests · build ~200 kB gzip.
+
 ## UX AUDIT — 16 findings (2026-07-22) — THE WORK QUEUE
 Full walkthrough as a new user. **Next task: work through these.**
 User's stated priority = readability and a slick, self-evident experience.

@@ -74,6 +74,9 @@ const en: Dict = {
   footer: 'Typemoon · public-domain passages via Project Gutenberg · built for the love of letters',
   notesRead: '{n} notes read',
   notesRejected: 'not understood: {list}',
+  'midi_not-midi': 'That is not a MIDI file.',
+  'midi_no-notes': 'No notes found in that file.',
+  midi_unreadable: 'That file could not be read.',
 };
 
 const fr: Dict = {
@@ -147,6 +150,9 @@ const fr: Dict = {
   footer: 'Typemoon · textes du domaine public via le Projet Gutenberg · fait par amour des lettres',
   notesRead: '{n} notes lues',
   notesRejected: 'non compris : {list}',
+  'midi_not-midi': 'Ce n’est pas un fichier MIDI.',
+  'midi_no-notes': 'Aucune note trouvée dans ce fichier.',
+  midi_unreadable: 'Ce fichier n’a pas pu être lu.',
 };
 
 const es: Dict = {
@@ -220,6 +226,9 @@ const es: Dict = {
   footer: 'Typemoon · pasajes de dominio público vía Proyecto Gutenberg · hecho por amor a las letras',
   notesRead: '{n} notas leídas',
   notesRejected: 'no entendido: {list}',
+  'midi_not-midi': 'Eso no es un archivo MIDI.',
+  'midi_no-notes': 'No se han encontrado notas en ese archivo.',
+  midi_unreadable: 'No se ha podido leer ese archivo.',
 };
 
 const de: Dict = {
@@ -293,6 +302,9 @@ const de: Dict = {
   footer: 'Typemoon · gemeinfreie Textstellen via Project Gutenberg · aus Liebe zu den Buchstaben',
   notesRead: '{n} Noten gelesen',
   notesRejected: 'nicht verstanden: {list}',
+  'midi_not-midi': 'Das ist keine MIDI-Datei.',
+  'midi_no-notes': 'In dieser Datei wurden keine Noten gefunden.',
+  midi_unreadable: 'Diese Datei konnte nicht gelesen werden.',
 };
 
 /** Exported so a test can prove no language has silently fallen behind English. */
