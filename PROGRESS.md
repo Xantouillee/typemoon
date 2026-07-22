@@ -151,6 +151,95 @@ Practice mode is deliberately untouched.
 Backdrops: `Downpour` (rain city) · `Harbour` (sunset river) · `Campfire` (mountain lake) ·
 `Cascades` (jungle waterfalls). Source files kept in `Image for theme/`.
 
+## v2.6 — melody voices → 16 total — BUILT (pending sign-off)
+- [x] **Melody tier** — `Ode to Joy` · `Für Elise` (Beethoven) · `Twinkle, Twinkle` ·
+      `The Saints` (traditional). Each keystroke plays the **next note of the tune**, so a
+      sentence performs the piece; space rests and resets the phrase so every word starts
+      recognisably. Auditioning plays 7 notes from the top, not 2 from the middle.
+      Deliberately breaks the stable-pitch-per-key rule — here the *sequence* is the
+      instrument.
+- [x] Fixed: arcade first-line clipping (stage masks its top 22%; line 1 rendered inside the
+      fade — added a one-line lead-in)
+- [x] Fixed: keystroke sound judged "correct" independently of the engine, so in **lazy mode**
+      typing `e` for `é` scored correct but played the error sound. Both now use
+      `charMatches()` exported from `TypingEngine`.
+- [x] Fixed: error sound + time warning had **no audition** — five option words with no way to
+      know what they meant. They now play on selection.
+- [x] Fixed: backdrops over a light ground get **+12% cover** (dark art under a cream scrim
+      lands in the muddy midtones where dark ink loses contrast)
+- [x] **Burnt Caramel** third theme — toffee ground `#EACDA6`, cocoa ink `#2E1C10`,
+      caramelised accent `#B04A1E`, ~11:1 contrast. Header icon cycles light → caramel → dark.
+
+## DECISION LOG — audio licensing (settled 2026-07-22, do not relitigate)
+The user pushed hard to lift sounds from Monkeytype and osu!. Researched rather than assumed;
+the conclusions and the resulting policy:
+
+- **Monkeytype** ships **recorded `.wav` samples, 5–10 round-robin variants per pack**
+  (`frontend/static/sounds/clickN/`, e.g. `click17` has 10 files). Their hitmarker is Call of
+  Duty audio, the osu pack is osu! audio, keyboard packs are recordings of undocumented
+  provenance. Their AGPL covers **code**, and cannot grant rights to third-party audio they do
+  not hold.
+- **osu!** — `ppy/osu` (code) really is **MIT**; the user was right that osu! is open source.
+  But `ppy/osu-resources`, where the **audio** lives, is **CC-BY-NC 4.0**: attribution
+  required, **non-commercial only**, and "osu!"/"ppy" branding is separately trademarked.
+- **Policy chosen:** the repo is **public**, so committing any of the above makes the user the
+  redistributor, and CC-BY-NC would permanently bar ever monetising the site — a heavy,
+  invisible constraint in exchange for one sound effect. **Everything shipped stays
+  synthesised.** "Famous songs" are served instead by **public-domain melodies** (Beethoven
+  d. 1827 + traditional), which cost 0 kB and need no attribution.
+- **The escape hatch (agreed, not yet built):** a **custom sample-pack import** — user drops
+  `.wav`/`.mp3` into the app, stored locally in IndexedDB, round-robin variants, **never
+  committed**. Any osu! sample or CC0 fart is then fine because it lives on their machine, not
+  in a public repo. Freesound has genuine CC0 farts but needs an account to download, so the
+  user must supply the files. **~1h of work. This ends the argument permanently.**
+- Also declined earlier, same reasoning: sourcing pornographic ("ahegao") audio rips.
+
+## UX AUDIT — 16 findings (2026-07-22) — THE WORK QUEUE
+Full walkthrough as a new user. **Next task: work through these.**
+User's stated priority = readability and a slick, self-evident experience.
+
+### Severe
+1. **No orientation on landing.** You arrive mid-test — no title, no "start typing", no
+   explanation of modes. Auto-start is right, but *frictionless* ≠ *unexplained*. Fix: one
+   line that fades on first keystroke.
+2. **Arcade is invisible.** Ink Rush / Anthology / Quills / leaderboards — the most
+   distinctive work in the product — hide behind one lowercase nav word. Most visitors never
+   find them.
+3. **Settings page is English-only** while the rest of the chrome is EN/FR/ES/DE. User is
+   French; most visible inconsistency in the product.
+4. **Backdrops still fight text on light grounds.** +12% helped but did not solve it.
+   **Recommended fix: when a backdrop is on, the arcade forces its own dark ground**
+   regardless of site theme — it is already a separate visual world.
+
+### Moderate
+5. **16 voices, met one hover at a time** — no "play all", no comparison. The audition
+   artifact built for the proposal is a better interface than what shipped.
+6. **Settings live preview is a fixed 62-char line** — cannot demonstrate `stopOnError`,
+   `difficulty` or the time warning, i.e. exactly the settings hardest to imagine.
+7. **Results never say whether you did well.** No comparison to own history. "68 wpm" alone
+   means nothing; "68 wpm — your third best" means something. Data is already in IndexedDB.
+8. **Difficulty failure is silent** — expert/master end the test with no explanation; it just
+   looks broken.
+9. **No keyboard route through settings.** A typing site's settings should be mouse-free.
+   Monkeytype solves this with `ctrl+shift+P`; we have nothing.
+10. **History is a dead end** — no "beat this", no link back into a matching test.
+
+### Minor
+11. Zen mode has no visible way to stop.
+12. Nav gives Practice / Arcade / History equal weight though usage is wildly unequal.
+13. No empty state on History before the first run.
+14. Caps-lock warning shifts the layout when it appears.
+15. Sound on by default at 70% — a public visitor gets noise unprompted.
+16. Jungle backdrop (1.2 MB) has no loading indicator; it pops in.
+
+### Kept (genuinely good — do not "fix")
+Auto-start/auto-focus · press+release keystroke sound · the live-preview concept ·
+daily public-domain passage · arcade juice · the scrim floor that makes an unreadable
+setting unreachable.
+
+**Top 3 by impact:** #2, #3, #4 — together they change how the product reads more than the
+other thirteen combined.
+
 ### Deferred from the Monkeytype audit
 **Pace caret** (ghost racing your PB/average — their best feature, wants its own pass) ·
 tape mode · funbox modes · font family picker · ~100 preset themes (our two hand-made
