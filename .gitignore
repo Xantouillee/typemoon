@@ -15,6 +15,12 @@ dist-ssr
 # Machine-local Claude Code permissions, not shared
 .claude/settings.local.json
 
+# Tunes you drop in are yours and stay on your machine. The app never needs
+# them in the repo — it reads the file in the browser and keeps only the notes.
+# Ignored so a stray `git add -A` cannot publish someone else's composition.
+*.mid
+*.midi
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
