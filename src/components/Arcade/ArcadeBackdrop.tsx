@@ -5,6 +5,7 @@ import {
   backgroundUrl,
   type BackgroundId,
 } from '../../lib/backgrounds';
+import { useSettings } from '../../store/settings';
 
 interface Props {
   id: BackgroundId;
@@ -28,6 +29,7 @@ interface Props {
  */
 export function ArcadeBackdrop({ id, scrim, blur }: Props) {
   const meta = backgroundMeta(id);
+  const theme = useSettings((s) => s.theme);
   const [loaded, setLoaded] = useState(false);
 
   // Only fetch the image once it is actually chosen — the jungle frame alone is
@@ -45,7 +47,11 @@ export function ArcadeBackdrop({ id, scrim, blur }: Props) {
 
   if (!meta.file) return null;
 
-  const cover = Math.max(MIN_SCRIM, scrim);
+  // These scenes are all dark. Over a dark ground they simply go darker and pale
+  // text still pops, but a cream scrim over dark art lands in the muddy middle —
+  // exactly where dark ink text loses its contrast. Light grounds need more cover.
+  const boost = theme === 'dark' ? 0 : 0.12;
+  const cover = Math.min(0.96, Math.max(MIN_SCRIM, scrim) + boost);
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">

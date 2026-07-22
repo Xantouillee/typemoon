@@ -25,6 +25,23 @@
   color-scheme: light;
 }
 
+:root[data-theme='caramel'] {
+  /* Burnt Caramel — a warm, sunlit ground: toffee paper, cocoa ink,
+     caramelised-sugar accent. Deeper and sweeter than Ink on Cream. */
+  --paper: 234 205 166;      /* caramel latte    */
+  --paper-2: 223 189 145;    /* deeper toffee    */
+  --ink: 46 28 16;           /* dark cocoa       */
+  --ink-soft: 122 88 58;     /* milky coffee     */
+  --ink-faint: 166 130 93;   /* faded caramel    */
+  --accent: 176 74 30;       /* caramelised      */
+  --accent-2: 140 96 44;     /* toffee brass     */
+  --error: 158 52 34;        /* burnt            */
+  --gold: 168 118 52;
+  --line: 46 28 16;
+  --grain-opacity: 0.06;
+  color-scheme: light;
+}
+
 :root[data-theme='dark'] {
   /* Midnight Ink (dark) */
   --paper: 25 20 16;         /* warm near-black */

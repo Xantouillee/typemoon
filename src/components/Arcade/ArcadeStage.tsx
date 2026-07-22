@@ -92,7 +92,14 @@ export function ArcadeStage({
       >
         <div
           className="relative transition-transform duration-200 ease-out"
-          style={{ transform: `translateY(${scroll}px)` }}
+          style={{
+            transform: `translateY(${scroll}px)`,
+            // The container masks its top 22% to a fade. Without this lead-in the
+            // very first line renders at y=0 — inside that fade — and its top is
+            // clipped until the run scrolls. One line of padding starts the text
+            // below the mask; later lines are unaffected.
+            paddingTop: '2.75rem',
+          }}
         >
           {/* block caret */}
           {caret && (

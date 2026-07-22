@@ -10,7 +10,9 @@ import {
   ERROR_SOUND_IDS,
   SOUND_TIERS,
   VOICE_META,
+  errorKey,
   previewTheme,
+  timeWarning as playTimeWarning,
   type SoundThemeId,
 } from '../lib/sound';
 import { t } from '../i18n/strings';
@@ -330,6 +332,8 @@ export function SettingsPage() {
                 value={s.errorSound}
                 onChange={(v) => {
                   s.set('errorSound', v);
+                  // audition it — otherwise these five words mean nothing
+                  if (s.sound) errorKey(s.soundTheme, v);
                 }}
                 options={ERROR_SOUND_IDS.map((id) => ({ value: id, label: id }))}
               />
@@ -341,7 +345,10 @@ export function SettingsPage() {
               <Choice
                 groupId="timeWarning"
                 value={s.timeWarning}
-                onChange={(v) => s.set('timeWarning', v)}
+                onChange={(v) => {
+                  s.set('timeWarning', v);
+                  if (s.sound && v > 0) playTimeWarning();
+                }}
                 options={[
                   { value: 0, label: 'off' },
                   { value: 1, label: '1s' },
@@ -562,6 +569,7 @@ export function SettingsPage() {
                 onChange={(v) => s.setTheme(v)}
                 options={[
                   { value: 'light', label: 'ink on cream' },
+                  { value: 'caramel', label: 'burnt caramel' },
                   { value: 'dark', label: 'midnight ink' },
                 ]}
               />

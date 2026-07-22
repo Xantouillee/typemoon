@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { TypingEngine } from '../engine/TypingEngine';
+import { TypingEngine, charMatches } from '../engine/TypingEngine';
 import type { EngineSnapshot, TestResult } from '../engine/types';
 import { baseKey } from '../components/Keyboard/layouts';
 import {
@@ -147,7 +147,7 @@ export function useTypingTest(target: string, opts: Options): TypingApi {
       if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
 
       const expected = engine.snapshot().target[engine.snapshot().cursor];
-      const correct = e.key === expected;
+      const correct = charMatches(e.key, expected, opts.lazy);
       flashKey(e.key === ' ' ? ' ' : baseKey(e.key), !correct);
       if (opts.sound && fresh) {
         if (correct) pressKey(soundTheme, e.key, e.key === ' ');

@@ -9,7 +9,10 @@ import {
 import type { Confidence, Difficulty, StopOnError } from '../engine/types';
 import { backgroundMeta, type BackgroundId } from '../lib/backgrounds';
 
-export type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark' | 'caramel';
+
+/** Cycle order for the header toggle. */
+export const THEMES: Theme[] = ['light', 'caramel', 'dark'];
 export type Mode = 'time' | 'words' | 'quote' | 'daily' | 'zen';
 
 /** How a mistyped character is revealed. */
@@ -120,7 +123,8 @@ export const useSettings = create<SettingsState>()(
     (set) => ({
       ...DEFAULTS,
       setTheme: (theme) => set({ theme }),
-      toggleTheme: () => set((s) => ({ theme: s.theme === 'light' ? 'dark' : 'light' })),
+      toggleTheme: () =>
+        set((s) => ({ theme: THEMES[(THEMES.indexOf(s.theme) + 1) % THEMES.length] })),
       setLanguage: (language) => set({ language }),
       setMode: (mode) => set({ mode }),
       setTimeValue: (timeValue) => set({ timeValue }),

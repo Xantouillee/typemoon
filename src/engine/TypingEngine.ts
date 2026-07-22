@@ -36,6 +36,16 @@ function plain(ch: string): string {
 }
 
 /**
+ * Does a pressed character satisfy the expected one? Exported so the UI can ask
+ * the same question the engine does — deciding it independently is how the
+ * keystroke sound ends up disagreeing with the scoring.
+ */
+export function charMatches(char: string, expected: string, lazy = false): boolean {
+  if (char === expected) return true;
+  return lazy && plain(char) === plain(expected);
+}
+
+/**
  * Character-index typing engine.
  * The cursor walks the target string; each printable keypress is compared to the
  * expected character. Backspace steps the cursor back and clears that slot.
