@@ -228,7 +228,11 @@ export type SoundThemeId =
   | 'ode'
   | 'elise'
   | 'twinkle'
-  | 'saints';
+  | 'saints'
+  | 'canon'
+  | 'greensleeves'
+  | 'nachtmusik'
+  | 'fate';
 
 interface SoundTheme {
   id: SoundThemeId;
@@ -250,24 +254,91 @@ const MELODIES: Record<string, { title: string; notes: number[] }> = {
   // semitone offsets from C4; negatives drop below it
   ode: {
     title: 'Ode to Joy · Beethoven',
-    notes: [4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 4, 2, 2],
+    notes: [
+      4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 4, 2, 2,
+      4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 2, 0, 0,
+    ],
   },
   elise: {
     title: 'Für Elise · Beethoven',
-    notes: [16, 15, 16, 15, 16, 11, 14, 12, 9, 0, 4, 9, 11, 4, 8, 11, 12],
+    notes: [
+      16, 15, 16, 15, 16, 11, 14, 12, 9, 0, 4, 9, 11, 4, 8, 11, 12,
+      16, 15, 16, 15, 16, 11, 14, 12, 9, 0, 4, 9, 11, 4, 12, 11, 9,
+    ],
   },
   twinkle: {
     title: 'Twinkle, Twinkle · traditional',
-    notes: [0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0],
+    notes: [
+      0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0,
+      7, 7, 5, 5, 4, 4, 2, 7, 7, 5, 5, 4, 4, 2,
+      0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0,
+    ],
   },
   saints: {
     title: 'When the Saints · traditional',
-    notes: [0, 4, 5, 7, 0, 4, 5, 7, 0, 4, 5, 7, 4, 0, 4, 2],
+    notes: [
+      0, 4, 5, 7, 0, 4, 5, 7, 0, 4, 5, 7, 4, 0, 4, 2,
+      4, 4, 2, 0, 0, 4, 7, 7, 5, 4, 5, 4, 0, 2, 0,
+    ],
+  },
+  canon: {
+    title: 'Canon in D · Pachelbel',
+    notes: [
+      18, 16, 14, 13, 11, 9, 11, 13,
+      14, 13, 11, 9, 7, 6, 7, 4,
+      6, 2, 4, 1, 2, 6, 9, 7,
+      18, 16, 14, 13, 11, 9, 11, 13,
+      14, 13, 11, 9, 7, 6, 7, 6, 2,
+    ],
+  },
+  greensleeves: {
+    title: 'Greensleeves · traditional',
+    notes: [
+      -3, 0, 2, 4, 5, 4, 2, -1, -5, -3, -1, 0, -3, -3, -4, -3,
+      -1, -4, -8, -3, 0, 2, 4, 5, 4, 2, -1, -5, -3, -1, 0, -3,
+      -1, -4, -3, -3,
+      7, 7, 5, 4, 2, -1, -5, -3, -1, 0, -3, -3, -4, -3, -1, -4, -8, -3,
+    ],
+  },
+  nachtmusik: {
+    title: 'Eine kleine Nachtmusik · Mozart',
+    notes: [
+      -5, -10, -5, -10, -5, -1, 2,
+      0, -3, 0, -3, 0, 4, -3,
+      2, 2, 2, 4, 6, 7, 7,
+      9, 9, 9, 11, 12, 14, 14,
+      -5, -10, -5, -10, -5, -1, 2,
+      0, -3, 0, -3, 0, 4, -3,
+    ],
+  },
+  fate: {
+    title: 'Symphony No. 5 · Beethoven',
+    notes: [
+      7, 7, 7, 3, 5, 5, 5, 2,
+      7, 7, 7, 3, 5, 5, 5, 2,
+      10, 10, 10, 7, 8, 8, 8, 3,
+      12, 12, 12, 8, 10, 10, 10, 7,
+      15, 15, 15, 12, 14, 14, 14, 10,
+      7, 7, 7, 3,
+    ],
   },
 };
 
-/** Where each melody voice has got to. Advancing is the whole instrument. */
+/**
+ * Where each melody voice has got to.
+ *
+ * Advancing is the whole instrument, so the counter deliberately survives spaces:
+ * the tune plays across the whole run, not once per word. Only a fresh test winds
+ * it back to the first note (see `resetMelodies`), and a mistake merely stumbles
+ * back a couple of notes — a full reset on every typo would mean nobody ever
+ * hears past the opening bar, which is exactly the bug this design fixes.
+ */
 const melodyStep: Record<string, number> = {};
+
+/** Wind every tune back to its first note. Called when a run starts over. */
+export function resetMelodies() {
+  for (const id of Object.keys(MELODIES)) melodyStep[id] = 0;
+}
 
 /** Build a voice that walks a tune, one note per keystroke. */
 function melodyVoice(id: SoundThemeId): SoundTheme {
@@ -276,11 +347,10 @@ function melodyVoice(id: SoundThemeId): SoundTheme {
     id,
     press(k, big) {
       const { pan } = keyInfo(k);
-      // space is a rest that also resets the phrase, so each word starts the
-      // tune again rather than drifting somewhere unrecognisable
+      // A space is a breath, not a bar line: it sounds a soft low rest and leaves
+      // the phrase exactly where it stands, so the next word carries the tune on.
       if (big) {
-        melodyStep[id] = 0;
-        tone({ freq: 196, dur: 0.12, gain: 0.05, type: 'sine', pan, wet: 0.4 });
+        tone({ freq: 196, dur: 0.12, gain: 0.04, type: 'sine', pan, wet: 0.4 });
         return;
       }
       const i = melodyStep[id] ?? 0;
@@ -293,8 +363,8 @@ function melodyVoice(id: SoundThemeId): SoundTheme {
       /* a struck note rings out on its own */
     },
     error() {
-      // a sour semitone clash, and the phrase starts over
-      melodyStep[id] = 0;
+      // a sour semitone clash, and the player stumbles two notes back
+      melodyStep[id] = Math.max(0, (melodyStep[id] ?? 0) - 2);
       tone({ freq: 233, dur: 0.2, gain: 0.09, type: 'triangle', wet: 0.4 });
       tone({ freq: 247, dur: 0.2, gain: 0.07, type: 'triangle', wet: 0.4 });
     },
@@ -306,6 +376,10 @@ const THEMES: Record<SoundThemeId, SoundTheme> = {
   elise: melodyVoice('elise'),
   twinkle: melodyVoice('twinkle'),
   saints: melodyVoice('saints'),
+  canon: melodyVoice('canon'),
+  greensleeves: melodyVoice('greensleeves'),
+  nachtmusik: melodyVoice('nachtmusik'),
+  fate: melodyVoice('fate'),
 
   /** The original dry wooden tick, kept so v1 still sounds like v1. */
   classic: {
@@ -694,7 +768,10 @@ const THEMES: Record<SoundThemeId, SoundTheme> = {
 export const SOUND_TIERS: { id: string; voices: SoundThemeId[] }[] = [
   { id: 'tactile', voices: ['thock', 'petrichor', 'gloop', 'nib', 'wrap', 'typewriter', 'classic'] },
   { id: 'musical', voices: ['pentatonic', 'coin'] },
-  { id: 'melody', voices: ['ode', 'elise', 'twinkle', 'saints'] },
+  {
+    id: 'melody',
+    voices: ['ode', 'elise', 'canon', 'greensleeves', 'nachtmusik', 'fate', 'twinkle', 'saints'],
+  },
   { id: 'joke', voices: ['hitmarker', 'bonk', 'fart'] },
 ];
 
@@ -788,6 +865,26 @@ export const VOICE_META: Record<
     material: 'traditional',
     wave: (x) => Math.exp(-x * 1.8) * Math.sin(x * 26),
   },
+  canon: {
+    name: 'Canon in D',
+    material: 'Pachelbel · 1680',
+    wave: (x) => Math.exp(-x * 1.6) * Math.sin(x * 36 - x * x * 14),
+  },
+  greensleeves: {
+    name: 'Greensleeves',
+    material: 'traditional · 1580',
+    wave: (x) => Math.exp(-x * 1.7) * Math.sin(x * 20 + x * x * 16),
+  },
+  nachtmusik: {
+    name: 'Eine kleine Nachtmusik',
+    material: 'Mozart · 1787',
+    wave: (x) => Math.exp(-x * 1.9) * Math.sin(x * 34) * (1 - x * 0.2),
+  },
+  fate: {
+    name: 'Fate (Symphony No. 5)',
+    material: 'Beethoven · 1808',
+    wave: (x) => Math.exp(-x * 2.6) * Math.sin(x * 18 + Math.sin(x * 46) * 2),
+  },
 };
 
 export const DEFAULT_SOUND_THEME: SoundThemeId = 'thock';
@@ -839,8 +936,8 @@ export function timeWarning() {
   window.setTimeout(() => tone({ freq: 880, dur: 0.12, gain: 0.08, type: 'sine', wet: 0.3 }), 150);
 }
 
-// Auditioning is fired from both hover and click, and a picker full of voices is
-// easy to sweep a mouse across — so a preview always cancels the one before it.
+// Auditioning is click-only, but a melody preview runs for two seconds and people
+// click faster than that — so a preview always cancels the one before it.
 let previewTimers: number[] = [];
 
 function clearPreview() {
@@ -852,8 +949,8 @@ let lastPreview = { id: '' as string, at: 0 };
 
 /**
  * Two keystrokes, for auditioning a voice in the picker. Re-auditioning the same
- * voice within a moment is a no-op, so hovering a card and then clicking it does
- * not fire the sound twice on top of itself.
+ * voice within a moment is a no-op, so a double click does not fire the sound
+ * twice on top of itself.
  */
 export function previewTheme(id: SoundThemeId) {
   const now = Date.now();
@@ -867,13 +964,14 @@ export function previewTheme(id: SoundThemeId) {
   // the phrase — two notes from somewhere in the middle identify nothing.
   if (MELODIES[id]) {
     melodyStep[id] = 0;
-    for (let i = 0; i < 7; i++) {
-      previewTimers.push(window.setTimeout(() => t.press('t', false), i * 230));
+    for (let i = 0; i < 10; i++) {
+      previewTimers.push(window.setTimeout(() => t.press('t', false), i * 205));
     }
+    // leave the tune parked at its first note, so typing picks it up from the top
     previewTimers.push(
       window.setTimeout(() => {
         melodyStep[id] = 0;
-      }, 7 * 230),
+      }, 10 * 205),
     );
     return;
   }

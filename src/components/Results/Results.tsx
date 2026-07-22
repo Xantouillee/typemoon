@@ -1,20 +1,125 @@
 import { motion } from 'framer-motion';
-import type { TestResult } from '../../engine/types';
+import type { Difficulty, TestResult } from '../../engine/types';
 import { CountUp } from './CountUp';
 import { WpmChart } from './WpmChart';
 import { Keyboard } from '../Keyboard/Keyboard';
 import type { Layout } from '../Keyboard/layouts';
-import { t } from '../../i18n/strings';
+import { ordinal, t, tf } from '../../i18n/strings';
 import { toSpeedUnit, type SpeedUnit } from '../../store/settings';
+import type { RunVerdict } from '../../lib/db';
 
 interface Props {
   result: TestResult;
   lang: string;
   speedUnit?: SpeedUnit;
   layout: Layout;
+  /** how this run stands against your own history; null while it loads */
+  verdict?: RunVerdict | null;
+  /** the mode this run was typed in, for the verdict sentence */
+  modeText?: string;
+  /** the run was cut short by Expert/Master, rather than reaching its end */
+  failed?: boolean;
+  difficulty?: Difficulty;
   onAgain: () => void;
   onNew: () => void;
   newLabel: string;
+}
+
+/**
+ * The sentence that turns a number into a result.
+ *
+ * "68 wpm" says nothing on its own — it is only a good or a bad run relative to
+ * the runs behind it, and that history is already sitting in IndexedDB. This is
+ * the one line that answers the question everybody actually asks.
+ */
+function Verdict({
+  verdict,
+  lang,
+  modeText,
+  unit,
+  wpm,
+}: {
+  verdict: RunVerdict;
+  lang: string;
+  modeText: string;
+  unit: SpeedUnit;
+  wpm: number;
+}) {
+  const amount = (n: number) => `${toSpeedUnit(Math.abs(n), unit)} ${unit}`;
+
+  let text: string;
+  let strong = false;
+
+  if (verdict.first) {
+    text = tf(lang, 'verdictFirst', { mode: modeText });
+  } else if (verdict.isPersonalBest) {
+    strong = true;
+    text = tf(lang, 'verdictBest', {
+      delta: amount(wpm - verdict.previousBest),
+      best: amount(verdict.previousBest),
+    });
+  } else {
+    const rank = tf(lang, 'verdictRank', {
+      rank: ordinal(lang, verdict.rank),
+      mode: modeText,
+    });
+    const trend =
+      verdict.delta > 0
+        ? tf(lang, 'verdictAbove', { delta: amount(verdict.delta) })
+        : verdict.delta < 0
+          ? tf(lang, 'verdictBelow', { delta: amount(verdict.delta) })
+          : t(lang, 'verdictLevel');
+    text = `${rank} · ${trend}`;
+  }
+
+  return (
+    <motion.p
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.45 }}
+      className="font-sans text-[13.5px] mt-2"
+      style={{
+        color: strong ? 'rgb(var(--accent))' : 'rgb(var(--ink-soft))',
+        fontWeight: strong ? 600 : 400,
+      }}
+    >
+      {strong && '★ '}
+      {text}
+    </motion.p>
+  );
+}
+
+/**
+ * Why the run stopped when it did.
+ *
+ * Expert and Master end a test mid-sentence. Without this the screen simply
+ * appears, seconds early, with no explanation — which reads as a bug rather than
+ * as the rule you switched on.
+ */
+function EndedEarly({ lang, difficulty }: { lang: string; difficulty: Difficulty }) {
+  return (
+    <motion.div
+      variants={item}
+      className="flex flex-col gap-0.5 rounded-sm px-4 py-3 mb-6"
+      style={{
+        background: 'rgb(var(--error) / 0.08)',
+        borderLeft: '2.5px solid rgb(var(--error))',
+      }}
+    >
+      <span
+        className="font-mono text-[10px] uppercase tracking-[0.18em]"
+        style={{ color: 'rgb(var(--error))' }}
+      >
+        {t(lang, 'endedEarly')}
+      </span>
+      <span className="font-sans text-[13.5px]" style={{ color: 'rgb(var(--ink))' }}>
+        {t(lang, difficulty === 'master' ? 'endedMaster' : 'endedExpert')}
+      </span>
+      <span className="font-sans text-[12.5px]" style={{ color: 'rgb(var(--ink-faint))' }}>
+        {t(lang, 'endedNote')}
+      </span>
+    </motion.div>
+  );
 }
 
 function Stat({ label, value, accent }: { label: string; value: React.ReactNode; accent?: boolean }) {
@@ -48,6 +153,10 @@ export function Results({
   lang,
   speedUnit,
   layout,
+  verdict,
+  modeText,
+  failed,
+  difficulty,
   onAgain,
   onNew,
   newLabel,
@@ -58,6 +167,10 @@ export function Results({
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="w-full">
+      {failed && difficulty && difficulty !== 'normal' && (
+        <EndedEarly lang={lang} difficulty={difficulty} />
+      )}
+
       {/* headline */}
       <motion.div variants={item} className="flex items-end justify-between flex-wrap gap-6 mb-8">
         <div>
@@ -68,6 +181,15 @@ export function Results({
           >
             <CountUp value={toSpeedUnit(result.wpm, speedUnit ?? 'wpm')} decimals={speedUnit === 'wps' ? 1 : 0} />
           </div>
+          {verdict && (
+            <Verdict
+              verdict={verdict}
+              lang={lang}
+              modeText={modeText ?? ''}
+              unit={speedUnit ?? 'wpm'}
+              wpm={result.wpm}
+            />
+          )}
         </div>
         <div className="grid grid-cols-3 gap-x-10 gap-y-5">
           <Stat label={t(lang, 'accuracy')} value={<><CountUp value={result.accuracy} decimals={1} delay={150} />%</>} />

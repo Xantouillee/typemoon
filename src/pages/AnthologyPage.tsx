@@ -28,7 +28,8 @@ import {
   type Gimmick,
 } from '../arcade/anthology';
 import { useSettings } from '../store/settings';
-import { ArcadeBackdrop } from '../components/Arcade/ArcadeBackdrop';
+import { Backdrop, useBackdropClass } from '../components/Backdrop/Backdrop';
+import { t } from '../i18n/strings';
 import { bestArcadeScore, saveArcadeScore } from '../lib/db';
 import { fmtMult } from '../components/Arcade/MultMeter';
 import {
@@ -63,6 +64,7 @@ function prefersReduced() {
 export function AnthologyRun({ pool, onExit }: { pool: string[]; onExit: () => void }) {
   const s = useSettings();
   const lang = s.language;
+  const backdropClass = useBackdropClass();
   const reduced = useMemo(prefersReduced, []);
 
   const [phase, setPhase] = useState<Phase>('intro');
@@ -281,10 +283,10 @@ export function AnthologyRun({ pool, onExit }: { pool: string[]; onExit: () => v
   return (
     <div
       className={`relative flex-1 flex flex-col items-center px-6 pb-16 ${
-        s.arcadeBg === 'none' ? '' : 'on-backdrop'
+        backdropClass
       }`}
     >
-      <ArcadeBackdrop id={s.arcadeBg} scrim={s.arcadeScrim} blur={s.arcadeBlur} />
+      <Backdrop />
       <div
         className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-500"
         style={{
@@ -467,19 +469,19 @@ export function AnthologyRun({ pool, onExit }: { pool: string[]; onExit: () => v
             </div>
             <div className="flex items-center justify-center gap-8 flex-wrap">
               <div className="flex flex-col items-center gap-1">
-                <span className="eyebrow">pages</span>
+                <span className="eyebrow">{t(lang, 'pagesLabel')}</span>
                 <span className="font-display font-bold" style={{ fontSize: '1.6rem', color: 'rgb(var(--ink))' }}>
                   {phase === 'won' ? ANTHOLOGY.length : pageIndex}/{ANTHOLOGY.length}
                 </span>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <span className="eyebrow">peak mult</span>
+                <span className="eyebrow">{t(lang, 'peakMult')}</span>
                 <span className="font-display font-bold" style={{ fontSize: '1.6rem', color: 'rgb(var(--ink))' }}>
                   ×{fmtMult(lastSummary.peakMult)}
                 </span>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <span className="eyebrow">quills</span>
+                <span className="eyebrow">{t(lang, 'quillsLabel')}</span>
                 <span className="font-display font-bold" style={{ fontSize: '1.6rem', color: 'rgb(var(--ink))' }}>
                   {quills.length}
                 </span>
@@ -487,7 +489,7 @@ export function AnthologyRun({ pool, onExit }: { pool: string[]; onExit: () => v
             </div>
             {quills.length > 0 && (
               <div className="flex flex-col items-center gap-2">
-                <span className="eyebrow">your quills</span>
+                <span className="eyebrow">{t(lang, 'yourQuills')}</span>
                 <div className="flex flex-wrap items-center justify-center gap-1.5">
                   <QuillTray quills={quills} skipReady />
                 </div>
@@ -502,18 +504,19 @@ export function AnthologyRun({ pool, onExit }: { pool: string[]; onExit: () => v
                 className="px-6 py-2.5 rounded-full font-sans font-semibold text-sm transition-transform hover:scale-[1.03]"
                 style={{ background: 'rgb(var(--accent))', color: 'rgb(var(--paper))' }}
               >
-                New run
+                {t(lang, 'newRun')}
               </button>
               <button
                 onClick={onExit}
                 className="px-6 py-2.5 rounded-full font-sans font-semibold text-sm"
                 style={{ border: '1px solid rgb(var(--ink) / 0.2)', color: 'rgb(var(--ink-soft))' }}
               >
-                Back to arcade
+                {t(lang, 'backToArcade')}
               </button>
             </div>
             <span className="font-mono text-xs" style={{ color: 'rgb(var(--ink-faint))' }}>
-              press <kbd className="px-1.5 py-0.5 rounded border" style={{ borderColor: 'rgb(var(--ink) / 0.15)' }}>enter</kbd> for a new run
+              <kbd className="px-1.5 py-0.5 rounded border" style={{ borderColor: 'rgb(var(--ink) / 0.15)' }}>enter</kbd>{' '}
+              {t(lang, 'pressEnterNewRun')}
             </span>
           </motion.div>
         )}

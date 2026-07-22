@@ -1,17 +1,22 @@
 import { motion } from 'framer-motion';
 
 /**
- * One setting: a name, a sentence explaining what it does, and its control.
- * The description carries its weight — a setting nobody understands is dead UI.
+ * One setting: a name, a sentence explaining what it does, its control — and,
+ * where the behaviour is hard to picture, a concrete example underneath.
+ *
+ * The description carries its weight: a setting nobody understands is dead UI,
+ * and "Confidence: off / on / max" understands nothing about itself.
  */
 export function Row({
   label,
   hint,
+  tip,
   children,
   wide,
 }: {
   label: string;
   hint: string;
+  tip?: string;
   children: React.ReactNode;
   wide?: boolean;
 }) {
@@ -30,6 +35,17 @@ export function Row({
         >
           {hint}
         </p>
+        {tip && (
+          <p
+            className="font-sans text-[12px] leading-snug mt-1.5 pl-2.5"
+            style={{
+              color: 'rgb(var(--ink-faint))',
+              borderLeft: '1.5px solid rgb(var(--ink) / 0.14)',
+            }}
+          >
+            {tip}
+          </p>
+        )}
       </div>
       <div className={wide ? 'mt-3' : 'mt-3 md:mt-0 md:justify-self-end'}>{children}</div>
     </div>

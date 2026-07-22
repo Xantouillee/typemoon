@@ -85,6 +85,67 @@ export async function bestArcadeScore(mode: string): Promise<number> {
   return rows.reduce((m, r) => Math.max(m, r.score), 0);
 }
 
+/** How a finished run stands against everything you have typed before. */
+export interface RunVerdict {
+  /** 1 = your best ever, counting this run. */
+  rank: number;
+  /** how many runs it is ranked among, this one included */
+  total: number;
+  /** best wpm before this run */
+  previousBest: number;
+  /** mean of the ten runs before this one */
+  recentAvg: number;
+  /** wpm minus recentAvg, rounded */
+  delta: number;
+  isPersonalBest: boolean;
+  /** nothing comparable in the history — the first run of its kind */
+  first: boolean;
+}
+
+/**
+ * Rank a run against its own kind. Comparing a 30-second English sprint with a
+ * hundred words of German would be meaningless, so the cohort is the same mode
+ * in the same language — and if there is no such cohort yet, we say so instead
+ * of inventing a comparison.
+ *
+ * Call this *before* saving the run, so the run does not compete with itself.
+ */
+export async function judgeRun(
+  wpm: number,
+  mode: string,
+  language: string,
+): Promise<RunVerdict> {
+  const prior = (await db.runs.where('mode').equals(mode).toArray()).filter(
+    (r) => r.language === language,
+  );
+
+  if (prior.length === 0) {
+    return {
+      rank: 1,
+      total: 1,
+      previousBest: 0,
+      recentAvg: 0,
+      delta: 0,
+      isPersonalBest: false,
+      first: true,
+    };
+  }
+
+  const previousBest = Math.max(...prior.map((r) => r.wpm));
+  const recent = [...prior].sort((a, b) => b.date - a.date).slice(0, 10);
+  const recentAvg = recent.reduce((a, r) => a + r.wpm, 0) / recent.length;
+
+  return {
+    rank: prior.filter((r) => r.wpm > wpm).length + 1,
+    total: prior.length + 1,
+    previousBest,
+    recentAvg: Math.round(recentAvg),
+    delta: Math.round(wpm - recentAvg),
+    isPersonalBest: wpm > previousBest,
+    first: false,
+  };
+}
+
 export interface HistoryStats {
   total: number;
   bestWpm: number;

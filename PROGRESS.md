@@ -170,6 +170,58 @@ Backdrops: `Downpour` (rain city) · `Harbour` (sunset river) · `Campfire` (mou
 - [x] **Burnt Caramel** third theme — toffee ground `#EACDA6`, cocoa ink `#2E1C10`,
       caramelised accent `#B04A1E`, ~11:1 contrast. Header icon cycles light → caramel → dark.
 
+## v2.7 — the user's own list — BUILT (pending sign-off)
+Worked from the user's message of 2026-07-22, which cherry-picked from the 16-point audit
+and added three of their own. All eight items done.
+
+1. **Melody voices now play the whole song.** The bug: `melodyStep` reset on every space, so
+   the tune restarted each word and you only ever heard as many notes as the word was long.
+   Now the counter survives spaces (a space is a soft low rest), an error stumbles back two
+   notes rather than resetting, and only a fresh run winds the tune back (`resetMelodies()`,
+   called from `useTypingTest` and from the arcade's `start`). Every melody was also extended
+   to a full phrase (30–52 notes).
+2. **Four new public-domain songs** — Canon in D (Pachelbel), Greensleeves (traditional),
+   Eine kleine Nachtmusik (Mozart), Fate / Symphony No. 5 (Beethoven). Melody tier is now 8;
+   20 voices in total. Still synthesised, still nothing licensed. See the decision log below.
+3. **Click to audition, never hover.** Sweeping a mouse across the grid used to fire a dozen
+   voices on top of each other. Removed from both the settings picker and the header popover.
+4. **Backdrops now cover practice as well as the arcade**, with an **eye toggle** in the
+   header (`bgVisible`) that hides the scene without forgetting which one you chose.
+   Store keys renamed `arcade*` → `bg*` with a persist `migrate` (version 2).
+   `ArcadeBackdrop` → `components/Backdrop/Backdrop.tsx`, store-connected, plus
+   `useBackdropClass()`.
+5. **Readability, properly solved** (audit #4, but not the way the audit proposed). Rather
+   than forcing a dark ground, the *typing surface itself* now carries a near-solid sheet of
+   paper over a backdrop (`.on-backdrop [data-typing-surface]`), and untyped ink strengthens
+   via `--untyped-alpha`. Because the words no longer depend on the scrim, the light-ground
+   boost dropped 0.12 → 0.06 and **the scene is finally visible**. Also killed a stray focus
+   ring around the whole passage.
+6. **The live preview can now demonstrate the rules it could not** (audit #6). Longer
+   localised sample (with accents, so lazy mode is demonstrable), its own 20-second clock so
+   the time warning actually fires, and a status band that says in words what just happened:
+   blocked / Expert / Master / time warning. Failures hold on screen 2.4 s before looping.
+7. **Results now say whether you did well** (audit #7). `judgeRun()` ranks a run against the
+   same mode in the same language — computed *before* the save, so it never competes with
+   itself. Yields "First run at words 10", "Personal best — 12 wpm above your old best of 64",
+   or "Your 3rd best at time 30 · 5 wpm above your recent average". Ordinals are per-language.
+8. **Difficulty failure is explained** (audit #8). An "ENDED EARLY" strip on the results
+   screen names the rule that stopped the run, plus a live "fix that letter to carry on" chip
+   for stop-on-error. A failed run is **neither saved nor ranked** — it is not an attempt at
+   the mode, and recording it would poison the average it would then be judged against.
+9. **Everything translated** (audit #3). New typed `i18n/copy.ts` for the settings page: a
+   missing translation is a compile error, not a silent English fallback. Every row also
+   gained a `tip` — a concrete example for the settings that are hard to picture. Arcade
+   menu, Anthology summary and the footer went through `strings.ts`. New test proves all four
+   dictionaries carry identical keys with no empty values.
+
+Also fixed: `restart()` rebuilt the engine with only `timeLimit`, silently dropping
+difficulty, stop-on-error, confidence, freedom and lazy mode every time anyone pressed Tab.
+
+Gates: `tsc -b` clean · **75/75** tests · build ~196 kB gzip.
+
+Audit items now closed: **#3, #4, #6, #7, #8** (and #5 partly — auditioning is fixed,
+"play all" is not built). Still open: #1, #2, #9, #10, and all six minor ones.
+
 ## DECISION LOG — audio licensing (settled 2026-07-22, do not relitigate)
 The user pushed hard to lift sounds from Monkeytype and osu!. Researched rather than assumed;
 the conclusions and the resulting policy:

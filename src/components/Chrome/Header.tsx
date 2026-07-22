@@ -24,6 +24,26 @@ function IconSun() {
   );
 }
 
+/** Open eye — the backdrop is showing. */
+function IconEye() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="2.8" />
+    </svg>
+  );
+}
+
+/** Closed eye — the backdrop is hidden, but not forgotten. */
+function IconEyeOff() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M2 12s3.6-6.5 10-6.5c1.9 0 3.5.6 4.9 1.4M22 12s-1.3 2.3-3.8 4.1M12 18.5c-6.4 0-10-6.5-10-6.5" strokeLinecap="round" />
+      <path d="M4 3.5 20.5 20.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function IconGear() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -106,6 +126,19 @@ export function Header() {
             </option>
           ))}
         </select>
+
+        {/* the eye only exists once there is something to hide */}
+        {s.bgId !== 'none' && (
+          <button
+            onClick={s.toggleBgVisible}
+            className="grid place-items-center w-9 h-9 rounded-full transition-colors"
+            style={{ color: s.bgVisible ? 'rgb(var(--ink))' : 'rgb(var(--ink-faint))' }}
+            aria-label={t(lang, s.bgVisible ? 'hideBackdrop' : 'showBackdrop')}
+            title={t(lang, s.bgVisible ? 'hideBackdrop' : 'showBackdrop')}
+          >
+            {s.bgVisible ? <IconEye /> : <IconEyeOff />}
+          </button>
+        )}
 
         <Link
           to="/settings"

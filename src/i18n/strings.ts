@@ -44,6 +44,34 @@ const en: Dict = {
   soundVoice: 'voice',
   proof: 'proofread',
   finished: 'finished',
+  hideBackdrop: 'hide the backdrop',
+  showBackdrop: 'show the backdrop',
+  verdictFirst: 'First run at {mode}. This is the mark to beat.',
+  verdictBest: 'Personal best — {delta} above your old best of {best}.',
+  verdictRank: 'Your {rank} best at {mode}',
+  verdictAbove: '{delta} above your recent average',
+  verdictBelow: '{delta} below your recent average',
+  verdictLevel: 'right on your recent average',
+  endedEarly: 'ended early',
+  endedMaster: 'Master difficulty: a single wrong key ends the run.',
+  endedExpert: 'Expert difficulty: a word went through with a mistake in it.',
+  endedNote: 'Everything you typed up to that point still counts.',
+  blockedLetter: 'Fix that letter to carry on.',
+  blockedWord: 'Fix the mistake in this word to carry on.',
+  inkRushBlurb: 'Chips × Multiplier. Every clean word feeds the multiplier — one mistake halves it and cracks a heart. No backspace. Lose three hearts and the run is over.',
+  anthologySub: '6-page roguelite run · pick Quills · beat the final boss',
+  scoreAttack: 'score attack',
+  newBadge: 'new',
+  best: 'best',
+  noRunsYet: 'no runs yet',
+  pagesLabel: 'pages',
+  peakMult: 'peak mult',
+  quillsLabel: 'quills',
+  yourQuills: 'your quills',
+  newRun: 'New run',
+  backToArcade: 'Back to arcade',
+  pressEnterNewRun: 'for a new run',
+  footer: 'Typemoon · public-domain passages via Project Gutenberg · built for the love of letters',
 };
 
 const fr: Dict = {
@@ -87,6 +115,34 @@ const fr: Dict = {
   soundVoice: 'voix',
   proof: 'relecture',
   finished: 'terminé',
+  hideBackdrop: 'masquer le décor',
+  showBackdrop: 'afficher le décor',
+  verdictFirst: 'Première session en {mode}. Voilà la marque à battre.',
+  verdictBest: 'Record personnel — {delta} de plus que votre ancien record de {best}.',
+  verdictRank: 'Votre {rank} meilleure session en {mode}',
+  verdictAbove: '{delta} au-dessus de votre moyenne récente',
+  verdictBelow: '{delta} en dessous de votre moyenne récente',
+  verdictLevel: 'pile sur votre moyenne récente',
+  endedEarly: 'arrêtée avant la fin',
+  endedMaster: 'Difficulté Master : une seule touche fausse met fin à la session.',
+  endedExpert: 'Difficulté Expert : un mot est passé avec une faute dedans.',
+  endedNote: 'Tout ce que vous avez tapé jusque-là compte quand même.',
+  blockedLetter: 'Corrigez cette lettre pour continuer.',
+  blockedWord: 'Corrigez la faute dans ce mot pour continuer.',
+  inkRushBlurb: 'Jetons × Multiplicateur. Chaque mot sans faute nourrit le multiplicateur — une faute le divise par deux et fêle un cœur. Pas de retour arrière. Trois cœurs perdus et la partie s’arrête.',
+  anthologySub: 'partie roguelite en 6 pages · choisissez vos Plumes · battez le boss final',
+  scoreAttack: 'attaque de score',
+  newBadge: 'nouveau',
+  best: 'record',
+  noRunsYet: 'aucune partie',
+  pagesLabel: 'pages',
+  peakMult: 'mult. max',
+  quillsLabel: 'plumes',
+  yourQuills: 'vos plumes',
+  newRun: 'Nouvelle partie',
+  backToArcade: 'Retour à l’arcade',
+  pressEnterNewRun: 'pour une nouvelle partie',
+  footer: 'Typemoon · textes du domaine public via le Projet Gutenberg · fait par amour des lettres',
 };
 
 const es: Dict = {
@@ -130,6 +186,34 @@ const es: Dict = {
   soundVoice: 'voz',
   proof: 'revisión',
   finished: 'terminado',
+  hideBackdrop: 'ocultar el fondo',
+  showBackdrop: 'mostrar el fondo',
+  verdictFirst: 'Primera sesión en {mode}. Esta es la marca a batir.',
+  verdictBest: 'Récord personal — {delta} por encima de tu récord anterior de {best}.',
+  verdictRank: 'Tu {rank} mejor sesión en {mode}',
+  verdictAbove: '{delta} por encima de tu media reciente',
+  verdictBelow: '{delta} por debajo de tu media reciente',
+  verdictLevel: 'justo en tu media reciente',
+  endedEarly: 'terminada antes de tiempo',
+  endedMaster: 'Dificultad Master: una sola tecla equivocada termina la sesión.',
+  endedExpert: 'Dificultad Experto: una palabra pasó con un error dentro.',
+  endedNote: 'Todo lo que escribiste hasta ese punto sigue contando.',
+  blockedLetter: 'Corrige esa letra para continuar.',
+  blockedWord: 'Corrige el error de esta palabra para continuar.',
+  inkRushBlurb: 'Fichas × Multiplicador. Cada palabra limpia alimenta el multiplicador — un error lo parte por la mitad y agrieta un corazón. Sin retroceso. Pierde tres corazones y se acabó.',
+  anthologySub: 'partida roguelite de 6 páginas · elige Plumas · vence al jefe final',
+  scoreAttack: 'ataque de puntuación',
+  newBadge: 'nuevo',
+  best: 'récord',
+  noRunsYet: 'sin partidas',
+  pagesLabel: 'páginas',
+  peakMult: 'mult. máx',
+  quillsLabel: 'plumas',
+  yourQuills: 'tus plumas',
+  newRun: 'Nueva partida',
+  backToArcade: 'Volver al arcade',
+  pressEnterNewRun: 'para una nueva partida',
+  footer: 'Typemoon · pasajes de dominio público vía Proyecto Gutenberg · hecho por amor a las letras',
 };
 
 const de: Dict = {
@@ -173,10 +257,60 @@ const de: Dict = {
   soundVoice: 'Klangfarbe',
   proof: 'Korrektur',
   finished: 'fertig',
+  hideBackdrop: 'Hintergrund ausblenden',
+  showBackdrop: 'Hintergrund einblenden',
+  verdictFirst: 'Erster Lauf bei {mode}. Das ist die Marke, die es zu schlagen gilt.',
+  verdictBest: 'Persönliche Bestleistung — {delta} über deiner alten Bestmarke von {best}.',
+  verdictRank: 'Dein {rank} bester Lauf bei {mode}',
+  verdictAbove: '{delta} über deinem jüngsten Schnitt',
+  verdictBelow: '{delta} unter deinem jüngsten Schnitt',
+  verdictLevel: 'genau auf deinem jüngsten Schnitt',
+  endedEarly: 'vorzeitig beendet',
+  endedMaster: 'Schwierigkeit Master: eine einzige falsche Taste beendet den Lauf.',
+  endedExpert: 'Schwierigkeit Experte: ein Wort ging mit einem Fehler durch.',
+  endedNote: 'Alles, was du bis dahin getippt hast, zählt weiterhin.',
+  blockedLetter: 'Korrigiere diesen Buchstaben, um weiterzukommen.',
+  blockedWord: 'Korrigiere den Fehler in diesem Wort, um weiterzukommen.',
+  inkRushBlurb: 'Chips × Multiplikator. Jedes fehlerfreie Wort füttert den Multiplikator — ein Fehler halbiert ihn und bricht ein Herz. Keine Rücktaste. Drei Herzen verloren, und der Lauf ist vorbei.',
+  anthologySub: 'Roguelite-Lauf über 6 Seiten · wähle Federn · besiege den Endgegner',
+  scoreAttack: 'Punktejagd',
+  newBadge: 'neu',
+  best: 'Bestwert',
+  noRunsYet: 'noch keine Läufe',
+  pagesLabel: 'Seiten',
+  peakMult: 'max. Mult.',
+  quillsLabel: 'Federn',
+  yourQuills: 'deine Federn',
+  newRun: 'Neuer Lauf',
+  backToArcade: 'Zurück zur Arcade',
+  pressEnterNewRun: 'für einen neuen Lauf',
+  footer: 'Typemoon · gemeinfreie Textstellen via Project Gutenberg · aus Liebe zu den Buchstaben',
 };
 
-const DICTS: Record<string, Dict> = { en, fr, es, de };
+/** Exported so a test can prove no language has silently fallen behind English. */
+export const DICTS: Record<string, Dict> = { en, fr, es, de };
 
 export function t(lang: string, key: string): string {
   return DICTS[lang]?.[key] ?? en[key] ?? key;
+}
+
+/** `t` with `{placeholders}` filled in. */
+export function tf(lang: string, key: string, vars: Record<string, string | number>): string {
+  return t(lang, key).replace(/\{(\w+)\}/g, (m, name) =>
+    name in vars ? String(vars[name]) : m,
+  );
+}
+
+/**
+ * "3rd" / "3e" / "3.º" / "3." — languages disagree about ordinals, and getting
+ * this wrong is the sort of small thing that makes an interface feel foreign.
+ */
+export function ordinal(lang: string, n: number): string {
+  if (lang === 'fr') return n === 1 ? '1re' : `${n}e`;
+  if (lang === 'es') return `${n}.ª`;
+  if (lang === 'de') return `${n}.`;
+  const rem100 = n % 100;
+  if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
+  const suffix = { 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] ?? 'th';
+  return `${n}${suffix}`;
 }

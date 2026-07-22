@@ -57,6 +57,8 @@ export interface TestResult {
   perKey: PerKeyStat[];
   /** count of characters in the target that were actually reached */
   charsTyped: number;
+  /** the run was cut short by Expert/Master rather than reaching its end */
+  failed: boolean;
 }
 
 export interface EngineSnapshot {

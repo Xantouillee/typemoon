@@ -16,12 +16,14 @@ import {
   type Passage,
 } from '../lib/content';
 import type { TestResult } from '../engine/types';
-import { saveRun } from '../lib/db';
+import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
 import { t } from '../i18n/strings';
+import { Backdrop, useBackdropClass } from '../components/Backdrop/Backdrop';
 
 export function TestPage() {
   const s = useSettings();
   const lang = s.language;
+  const backdropClass = useBackdropClass();
   const layout = useMemo(
     () => LANGUAGES.find((l) => l.code === lang)?.layout ?? 'qwerty',
     [lang],
@@ -31,6 +33,7 @@ export function TestPage() {
   const [target, setTarget] = useState('');
   const [source, setSource] = useState<Passage | null>(null);
   const [result, setResult] = useState<TestResult | null>(null);
+  const [verdict, setVerdict] = useState<RunVerdict | null>(null);
   const [nonce, setNonce] = useState(0);
 
   // Build the typing target whenever the mode/options change or "new test" fires.
@@ -71,7 +74,17 @@ export function TestPage() {
   const onFinish = useCallback(
     (r: TestResult) => {
       setResult(r);
-      if (r.charsTyped > 0) void saveRun(r, modeLabel(s), lang);
+      setVerdict(null);
+      // A failed run is not an attempt at the mode — it is a run that Expert or
+      // Master stopped. Saving it would poison the average it would then be
+      // ranked against, so it is neither recorded nor judged.
+      if (r.charsTyped === 0 || r.failed) return;
+      const mode = modeLabel(s);
+      // rank first, save second — otherwise the run competes against itself
+      void (async () => {
+        setVerdict(await judgeRun(r.wpm, mode, lang));
+        await saveRun(r, mode, lang);
+      })();
     },
     [s, lang],
   );
@@ -134,12 +147,17 @@ export function TestPage() {
       : null;
 
   return (
-    <div className="flex flex-col items-center px-6 pb-16">
-      <div className={`transition-opacity duration-300 ${result ? 'opacity-40 pointer-events-none' : ''}`}>
+    <div className={`relative flex flex-col items-center px-6 pb-16 ${backdropClass}`}>
+      <Backdrop />
+      <div
+        className={`relative z-10 transition-opacity duration-300 ${
+          result ? 'opacity-40 pointer-events-none' : ''
+        }`}
+      >
         <ModeBar />
       </div>
 
-      <div className="w-full max-w-3xl mt-14 min-h-[26rem]">
+      <div className="relative z-10 w-full max-w-3xl mt-14 min-h-[26rem]">
         <AnimatePresence mode="wait">
           {result ? (
             <motion.div
@@ -153,6 +171,10 @@ export function TestPage() {
                 lang={lang}
                 speedUnit={s.speedUnit}
                 layout={layout}
+                verdict={verdict}
+                modeText={modeLabel(s)}
+                failed={typing.snapshot.failed}
+                difficulty={s.difficulty}
                 onAgain={() => {
                   setResult(null);
                   typing.restart();
@@ -200,6 +222,27 @@ export function TestPage() {
                   )}
                 </div>
               </div>
+
+              {/* stop-on-error swallows every keystroke until the typo is fixed;
+                  without a word of explanation that reads as a frozen page */}
+              {typing.snapshot.blocked && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-center mb-3"
+                >
+                  <span
+                    className="px-3 py-1 rounded-full font-sans text-[12px]"
+                    style={{
+                      color: 'rgb(var(--error))',
+                      background: 'rgb(var(--error) / 0.1)',
+                      border: '1px solid rgb(var(--error) / 0.35)',
+                    }}
+                  >
+                    {t(lang, s.stopOnError === 'word' ? 'blockedWord' : 'blockedLetter')}
+                  </span>
+                </motion.div>
+              )}
 
               {caps && (
                 <motion.div
@@ -249,7 +292,7 @@ export function TestPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
             transition={{ delay: 0.1 }}
-            className="mt-12"
+            className="relative z-10 mt-12"
           >
             <Keyboard layout={layout} activeKey={typing.activeKey} wrongKey={typing.wrongKey} />
           </motion.div>
@@ -258,7 +301,7 @@ export function TestPage() {
 
       {/* footer hint */}
       {!result && (
-        <div className="mt-10 flex items-center gap-4 text-[12px] font-sans" style={{ color: 'rgb(var(--ink-faint))' }}>
+        <div className="relative z-10 mt-10 flex items-center gap-4 text-[12px] font-sans" style={{ color: 'rgb(var(--ink-faint))' }}>
           <span className="flex items-center gap-1.5">
             <kbd className="px-2 py-0.5 rounded border" style={{ borderColor: 'rgb(var(--ink) / 0.15)' }}>tab</kbd>
             {t(lang, 'restart')}

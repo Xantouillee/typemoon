@@ -8,6 +8,7 @@ import {
   errorKey,
   pressKey,
   releaseKey,
+  resetMelodies,
   timeWarning as playTimeWarning,
   type ErrorSoundId,
   type SoundThemeId,
@@ -46,6 +47,8 @@ export interface TypingApi {
   focusProps: {
     ref: React.RefObject<HTMLDivElement | null>;
     tabIndex: number;
+    /** styling hook: kills the focus ring, and grounds the words over a backdrop */
+    'data-typing-surface': string;
     onKeyDown: (e: React.KeyboardEvent) => void;
     onKeyUp: (e: React.KeyboardEvent) => void;
     onFocus: () => void;
@@ -76,6 +79,8 @@ export function useTypingTest(target: string, opts: Options): TypingApi {
     engineRef.current = new TypingEngine(target, engineOpts(opts));
     finishedNotified.current = false;
     warned.current = false;
+    // a melody voice plays across the whole run — a new run starts the tune over
+    resetMelodies();
     setRemaining(opts.timeLimit ?? null);
     setActiveKey(null);
     rerender();
@@ -171,13 +176,19 @@ export function useTypingTest(target: string, opts: Options): TypingApi {
   );
 
   const restart = useCallback(() => {
-    engineRef.current = new TypingEngine(target, { timeLimit: opts.timeLimit });
+    // NB: must carry the full option set. Rebuilding with only the time limit
+    // silently dropped difficulty, stop-on-error, confidence, freedom and lazy
+    // mode the moment anyone pressed Tab.
+    engineRef.current = new TypingEngine(target, engineOpts(opts));
     finishedNotified.current = false;
+    warned.current = false;
+    resetMelodies();
     setRemaining(opts.timeLimit ?? null);
     setActiveKey(null);
     rerender();
     ref.current?.focus();
-  }, [target, opts.timeLimit, rerender]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, engineKey, rerender]);
 
   const focus = useCallback(() => ref.current?.focus(), []);
 
@@ -195,6 +206,7 @@ export function useTypingTest(target: string, opts: Options): TypingApi {
     focusProps: {
       ref,
       tabIndex: 0,
+      'data-typing-surface': '',
       onKeyDown,
       onKeyUp,
       onFocus: () => setFocused(true),

@@ -15,7 +15,13 @@ import {
   quillFlags,
   type QuillId,
 } from './quills';
-import { DEFAULT_SOUND_THEME, pressKey, releaseKey, type SoundThemeId } from '../lib/sound';
+import {
+  DEFAULT_SOUND_THEME,
+  pressKey,
+  releaseKey,
+  resetMelodies,
+  type SoundThemeId,
+} from '../lib/sound';
 
 export type ArcadeMode = 'sprint30' | 'sprint60' | 'endless';
 
@@ -369,6 +375,8 @@ export function useInkRush(config: RushConfig, cb: Callbacks) {
     const s = fresh(cfgRef.current);
     g.current = s;
     s.running = true;
+    // a melody voice plays across the whole run — a new run starts the tune over
+    resetMelodies();
     lastSpace.current = 0;
     refill(s);
     setRemaining(cfgRef.current.seconds);

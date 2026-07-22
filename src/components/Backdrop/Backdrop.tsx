@@ -7,6 +7,19 @@ import {
 } from '../../lib/backgrounds';
 import { useSettings } from '../../store/settings';
 
+/**
+ * True when a backdrop is actually on screen. Pages use it to add `on-backdrop`,
+ * which halos their text so it survives whatever the image is doing underneath.
+ */
+export function useBackdropOn(): boolean {
+  return useSettings((s) => s.bgVisible && s.bgId !== 'none');
+}
+
+/** Convenience for `className={...}` — '' or 'on-backdrop'. */
+export function useBackdropClass(): string {
+  return useBackdropOn() ? 'on-backdrop' : '';
+}
+
 interface Props {
   id: BackgroundId;
   /** 0..1 — how strongly the page colour covers the image */
@@ -16,7 +29,7 @@ interface Props {
 }
 
 /**
- * The arcade backdrop, in four stacked layers.
+ * The backdrop, in four stacked layers.
  *
  * Readability is enforced here rather than left to the image:
  *   1. the GIF, blurred/desaturated and `cover`-fitted so it never distorts
@@ -25,15 +38,15 @@ interface Props {
  *      and lightest at the edges, so the art still reads at the periphery
  *   4. a vignette to stop bright corners pulling the eye off the text
  *
- * Everything is `position: fixed` behind `z-0`; arcade content sits at `z-10`.
+ * Everything is `position: fixed` behind `z-0`; page content sits at `z-10`.
  */
-export function ArcadeBackdrop({ id, scrim, blur }: Props) {
+export function BackdropLayers({ id, scrim, blur }: Props) {
   const meta = backgroundMeta(id);
   const theme = useSettings((s) => s.theme);
   const [loaded, setLoaded] = useState(false);
 
   // Only fetch the image once it is actually chosen — the jungle frame alone is
-  // 1.2 MB, and nobody should pay for it just by opening the arcade.
+  // 1.2 MB, and nobody should pay for it just by opening the page.
   useEffect(() => {
     if (!meta.file) return setLoaded(false);
     setLoaded(false);
@@ -50,7 +63,11 @@ export function ArcadeBackdrop({ id, scrim, blur }: Props) {
   // These scenes are all dark. Over a dark ground they simply go darker and pale
   // text still pops, but a cream scrim over dark art lands in the muddy middle —
   // exactly where dark ink text loses its contrast. Light grounds need more cover.
-  const boost = theme === 'dark' ? 0 : 0.12;
+  //
+  // The boost used to be twice this. Now that the typing surface carries its own
+  // sheet of paper (see `.on-backdrop [data-typing-surface]`), the scrim no longer
+  // has to protect the words single-handedly — so the scene is allowed to show.
+  const boost = theme === 'dark' ? 0 : 0.06;
   const cover = Math.min(0.96, Math.max(MIN_SCRIM, scrim) + boost);
 
   return (
@@ -97,4 +114,14 @@ export function ArcadeBackdrop({ id, scrim, blur }: Props) {
       />
     </div>
   );
+}
+
+/**
+ * Store-connected backdrop. Every page that wants one just drops this in; the eye
+ * in the header takes it away without forgetting which scene you chose.
+ */
+export function Backdrop() {
+  const { bgId, bgScrim, bgBlur, bgVisible } = useSettings();
+  if (!bgVisible) return null;
+  return <BackdropLayers id={bgId} scrim={bgScrim} blur={bgBlur} />;
 }

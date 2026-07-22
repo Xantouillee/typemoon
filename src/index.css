@@ -148,13 +148,21 @@ body::before {
   color: rgb(var(--ink-soft));
 }
 
+/* The typing surface is focused programmatically so the first keystroke lands
+   without a click. A focus ring around the whole passage is pure noise — the
+   caret already says exactly where you are. */
+[data-typing-surface]:focus,
+[data-typing-surface]:focus-visible {
+  outline: none;
+}
+
 /* ============================================================
-   Text over an arcade backdrop.
+   Text over a backdrop.
 
    The scrim handles the average case, but a bright, busy frame (the
    waterfalls) can still sit directly under small type. A halo in the page
    colour guarantees local separation whatever the pixel behind it is doing,
-   and costs no layout. Applied to the arcade root only.
+   and costs no layout. Applied to the page root when a backdrop is showing.
    ============================================================ */
 .on-backdrop :where(h1, h2, h3, p, span, button, div) {
   text-shadow:
@@ -166,4 +174,21 @@ body::before {
 .on-backdrop :where(.panel, [data-panel]) {
   background: rgb(var(--paper) / 0.82);
   backdrop-filter: blur(6px);
+}
+
+/* The words you are about to type are the one thing that may never be hard to
+   read, so over a backdrop they get both a heavier ink and a near-solid sheet
+   of paper of their own. The art keeps the rest of the screen. */
+.on-backdrop {
+  --untyped-alpha: 0.85;
+}
+
+.on-backdrop [data-typing-surface] {
+  background: rgb(var(--paper) / 0.84);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 1rem 1.35rem;
+  box-shadow:
+    0 0 0 1px rgb(var(--ink) / 0.07),
+    0 30px 70px -50px rgb(var(--ink));
 }

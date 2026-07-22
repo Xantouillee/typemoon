@@ -6,6 +6,7 @@ import { StatsPage } from './pages/StatsPage';
 import { ArcadePage } from './pages/ArcadePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { useSettings } from './store/settings';
+import { t } from './i18n/strings';
 
 function ThemeGate({ children }: { children: React.ReactNode }) {
   const theme = useSettings((s) => s.theme);
@@ -16,6 +17,7 @@ function ThemeGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const lang = useSettings((s) => s.language);
   return (
     <ThemeGate>
       <HashRouter>
@@ -30,7 +32,7 @@ export default function App() {
             </Routes>
           </main>
           <footer className="py-6 text-center text-[11px] font-sans" style={{ color: 'rgb(var(--ink-faint))' }}>
-            Typemoon · public-domain passages via Project Gutenberg · built for the love of letters
+            {t(lang, 'footer')}
           </footer>
         </div>
       </HashRouter>

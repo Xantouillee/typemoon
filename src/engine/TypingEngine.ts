@@ -264,6 +264,7 @@ export class TypingEngine {
       series,
       perKey: perKeyStats(this.strokes),
       charsTyped: this.cursor,
+      failed: this._failed,
     };
   }
 }

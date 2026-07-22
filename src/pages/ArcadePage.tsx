@@ -16,7 +16,8 @@ import {
 } from '../arcade/useInkRush';
 import { tensionTier } from '../arcade/scoring';
 import { useSettings } from '../store/settings';
-import { ArcadeBackdrop } from '../components/Arcade/ArcadeBackdrop';
+import { Backdrop, useBackdropClass } from '../components/Backdrop/Backdrop';
+import { t } from '../i18n/strings';
 import { loadWords } from '../lib/content';
 import {
   bestArcadeScore,
@@ -50,6 +51,7 @@ function prefersReduced() {
 export function ArcadePage() {
   const s = useSettings();
   const lang = s.language;
+  const backdropClass = useBackdropClass();
   const reduced = useMemo(prefersReduced, []);
 
   const [phase, setPhase] = useState<Phase>('menu');
@@ -215,10 +217,10 @@ export function ArcadePage() {
   return (
     <div
       className={`relative flex-1 flex flex-col items-center px-6 pb-16 ${
-        s.arcadeBg === 'none' ? '' : 'on-backdrop'
+        backdropClass
       }`}
     >
-      <ArcadeBackdrop id={s.arcadeBg} scrim={s.arcadeScrim} blur={s.arcadeBlur} />
+      <Backdrop />
       <div
         className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-500"
         style={{
@@ -239,7 +241,7 @@ export function ArcadePage() {
             className="w-full max-w-2xl mt-10 flex flex-col items-center gap-8 text-center relative z-10"
           >
             <div className="flex flex-col items-center gap-3">
-              <span className="eyebrow" style={{ letterSpacing: '0.35em' }}>arcade</span>
+              <span className="eyebrow" style={{ letterSpacing: '0.35em' }}>{t(lang, 'arcade')}</span>
               <h1
                 className="font-display font-black leading-none"
                 style={{ fontSize: 'clamp(2.6rem, 8vw, 4.5rem)', color: 'rgb(var(--ink))' }}
@@ -247,9 +249,7 @@ export function ArcadePage() {
                 Ink&nbsp;Rush
               </h1>
               <p className="font-sans max-w-md" style={{ color: 'rgb(var(--ink-soft))', fontSize: '1rem' }}>
-                Chips × Multiplier. Every clean word feeds the multiplier — one mistake
-                halves it and cracks a heart. No backspace. Lose three hearts and the run
-                is over.
+                {t(lang, 'inkRushBlurb')}
               </p>
             </div>
 
@@ -268,7 +268,7 @@ export function ArcadePage() {
                   The Anthology
                 </span>
                 <span className="font-sans text-sm" style={{ color: 'rgb(var(--ink-soft))' }}>
-                  6-page roguelite run · pick Quills · beat the final boss
+                  {t(lang, 'anthologySub')}
                 </span>
               </span>
               <span className="flex flex-col items-end gap-1">
@@ -276,16 +276,18 @@ export function ArcadePage() {
                   className="font-sans text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full"
                   style={{ background: 'rgb(var(--accent))', color: 'rgb(var(--paper))' }}
                 >
-                  new
+                  {t(lang, 'newBadge')}
                 </span>
                 <span className="font-mono text-sm tabular-nums" style={{ color: 'rgb(var(--ink-faint))' }}>
-                  {bests['anthology'] ? `best ${bests['anthology'].toLocaleString()}` : '—'}
+                  {bests['anthology']
+                    ? `${t(lang, 'best')} ${bests['anthology'].toLocaleString()}`
+                    : '—'}
                 </span>
               </span>
             </button>
 
             <div className="w-full flex flex-col gap-3">
-              <span className="eyebrow self-center">score attack</span>
+              <span className="eyebrow self-center">{t(lang, 'scoreAttack')}</span>
               {(Object.keys(ARCADE_MODES) as ArcadeMode[]).map((m) => (
                 <button
                   key={m}
@@ -297,7 +299,9 @@ export function ArcadePage() {
                     {ARCADE_MODES[m].label}
                   </span>
                   <span className="font-mono text-sm tabular-nums" style={{ color: 'rgb(var(--ink-faint))' }}>
-                    {bests[m] ? `best ${bests[m].toLocaleString()}` : 'no runs yet'}
+                    {bests[m]
+                      ? `${t(lang, 'best')} ${bests[m].toLocaleString()}`
+                      : t(lang, 'noRunsYet')}
                   </span>
                 </button>
               ))}

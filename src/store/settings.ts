@@ -60,11 +60,13 @@ interface SettingsState {
   speedUnit: SpeedUnit;
   capsWarning: boolean;
 
-  // arcade backdrop
-  arcadeBg: BackgroundId;
+  // backdrop — applies to practice and the arcade alike
+  bgId: BackgroundId;
   /** 0..1 page-colour cover over the image; floored so text stays legible */
-  arcadeScrim: number;
-  arcadeBlur: number;
+  bgScrim: number;
+  bgBlur: number;
+  /** the eye: hide the backdrop everywhere without losing which one you picked */
+  bgVisible: boolean;
 
   setTheme: (t: Theme) => void;
   toggleTheme: () => void;
@@ -77,7 +79,8 @@ interface SettingsState {
   toggleSound: () => void;
   setSoundTheme: (t: SoundThemeId) => void;
   /** Also resets the scrim to a level that suits that image's brightness. */
-  setArcadeBg: (id: BackgroundId) => void;
+  setBg: (id: BackgroundId) => void;
+  toggleBgVisible: () => void;
   /** Any other setting, by key — the settings page drives everything through this. */
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
   reset: () => void;
@@ -113,9 +116,10 @@ const DEFAULTS = {
   speedUnit: 'wpm' as SpeedUnit,
   capsWarning: true,
 
-  arcadeBg: 'none' as BackgroundId,
-  arcadeScrim: 0.7,
-  arcadeBlur: 3,
+  bgId: 'none' as BackgroundId,
+  bgScrim: 0.7,
+  bgBlur: 3,
+  bgVisible: true,
 };
 
 export const useSettings = create<SettingsState>()(
@@ -133,8 +137,9 @@ export const useSettings = create<SettingsState>()(
       toggleNumbers: () => set((s) => ({ numbers: !s.numbers })),
       toggleSound: () => set((s) => ({ sound: !s.sound })),
       setSoundTheme: (soundTheme) => set({ soundTheme }),
-      setArcadeBg: (arcadeBg) =>
-        set({ arcadeBg, arcadeScrim: backgroundMeta(arcadeBg).weight || 0.7 }),
+      setBg: (bgId) =>
+        set({ bgId, bgScrim: backgroundMeta(bgId).weight || 0.7, bgVisible: true }),
+      toggleBgVisible: () => set((s) => ({ bgVisible: !s.bgVisible })),
       set: (key, value) => {
         if (key === 'soundVolume') setSoundVolume(value as number);
         set({ [key]: value } as Partial<SettingsState>);
@@ -143,6 +148,21 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'typemoon-settings',
+      // v2 promoted the arcade-only backdrop to a site-wide one and renamed its keys.
+      version: 2,
+      migrate: (persisted, from) => {
+        const s = persisted as Record<string, unknown>;
+        if (from < 2) {
+          return {
+            ...s,
+            bgId: s.arcadeBg ?? DEFAULTS.bgId,
+            bgScrim: s.arcadeScrim ?? DEFAULTS.bgScrim,
+            bgBlur: s.arcadeBlur ?? DEFAULTS.bgBlur,
+            bgVisible: true,
+          };
+        }
+        return s;
+      },
       onRehydrateStorage: () => (state) => {
         // the audio graph is created lazily, so push the stored volume into it
         if (state) setSoundVolume(state.soundVolume);

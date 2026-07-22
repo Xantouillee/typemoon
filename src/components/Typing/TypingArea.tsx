@@ -196,7 +196,9 @@ export function TypingArea({
                   ? 'rgb(var(--ink))'
                   : mistyped
                     ? 'rgb(var(--error))'
-                    : 'rgb(var(--ink-soft) / 0.55)';
+                    : // the alpha is a variable so a backdrop can strengthen the
+                    // not-yet-typed text without this component knowing about it
+                    'rgb(var(--ink-soft) / var(--untyped-alpha, 0.55))';
 
               // typed-effect only ever restyles characters already behind the cursor
               let opacity = 1;
