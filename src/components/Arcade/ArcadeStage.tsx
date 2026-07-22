@@ -40,7 +40,7 @@ export function ArcadeStage({
   const [caret, setCaret] = useState<CaretPos | null>(null);
   const [scroll, setScroll] = useState(0);
 
-  const { stream, states, cursor } = view;
+  const { stream, states, released, cursor } = view;
 
   // bounds of the word the user is on right now → highlight it so "what's next" is obvious
   const wordStart = stream.lastIndexOf(' ', Math.max(0, cursor - 1)) + 1;
@@ -132,16 +132,19 @@ export function ArcadeStage({
               const st = states[i];
               const isCurrent = i === cursor;
               const inActiveWord = i >= wordStart && i < wordEnd;
+              // abandoned when its word broke — struck out so the jump is legible
+              const gone = released[i];
               // color by state, with the active word kept bright and far words dimmed
               let color: string;
-              if (st === 'incorrect') color = 'rgb(var(--error))';
+              if (gone) color = 'rgb(var(--error) / 0.4)';
+              else if (st === 'incorrect') color = 'rgb(var(--error))';
               else if (st === 'correct') color = 'rgb(var(--ink) / 0.28)';
               else if (isCurrent) color = 'rgb(var(--ink))';
               else if (inActiveWord) color = 'rgb(var(--ink) / 0.85)';
               else color = 'rgb(var(--ink-soft) / 0.4)'; // upcoming words recede
               // continuous highlight pill behind the active word's untyped tail
               const highlight =
-                inActiveWord && !noHighlight && st !== 'correct' && st !== 'incorrect';
+                !gone && inActiveWord && !noHighlight && st !== 'correct' && st !== 'incorrect';
               // fog gimmick: haze the words not yet reached
               const fogged = blurUpcoming && i > wordEnd && st === 'untyped';
               return (
@@ -150,12 +153,14 @@ export function ArcadeStage({
                   ref={(el) => {
                     charRefs.current[i] = el;
                   }}
-                  className={st === 'incorrect' ? 'proof-underline' : ''}
+                  className={st === 'incorrect' && !gone ? 'proof-underline' : ''}
                   style={{
                     color,
                     fontWeight: isCurrent ? 700 : undefined,
                     padding: highlight ? '0.15em 0' : undefined,
                     filter: fogged ? 'blur(5px)' : undefined,
+                    textDecoration: gone ? 'line-through' : undefined,
+                    textDecorationColor: gone ? 'rgb(var(--error) / 0.55)' : undefined,
                     background:
                       st === 'incorrect' && ch === ' '
                         ? 'rgb(var(--error) / 0.2)'

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharState } from '../engine/types';
 import {
   HEAL_STREAK,
+  afterWord,
+  wordEndAt,
   crossedMilestone,
   isFast,
   multIncrement,
@@ -105,12 +107,26 @@ export interface InkRushView {
   skipRemaining: number;
   stream: string;
   states: CharState[];
+  /** Parallel to `states`: characters abandoned when their word broke. */
+  released: boolean[];
   cursor: number;
 }
 
 interface GameState {
   stream: string;
   states: CharState[];
+  /**
+   * Parallel to `states`: characters abandoned when their word broke. Kept
+   * separate from `CharState` because "released" is an arcade idea — the
+   * practice engine has no concept of giving up on a word.
+   */
+  released: boolean[];
+  /**
+   * Keystrokes before this instant are swallowed. Set when a word is released:
+   * a fast typist already has the next two keys in flight, aimed at the word we
+   * just took away, and letting them land would break the *next* word too.
+   */
+  graceUntil: number;
   cursor: number;
   wordStart: number;
   wordStartTime: number;
@@ -138,10 +154,22 @@ interface GameState {
 const BUFFER_TARGET = 260;
 const TRIM_BEHIND = 160;
 
+/**
+ * How long keystrokes are swallowed after a word is released.
+ *
+ * At 100 wpm a character lands roughly every 120 ms, so this covers the two keys
+ * a fast typist has already committed to. Long enough that the ruined word's
+ * tail cannot break the next word; short enough that it never eats a key the
+ * player chose after seeing the jump.
+ */
+const RELEASE_GRACE_MS = 220;
+
 function fresh(cfg: RushConfig): GameState {
   return {
     stream: '',
     states: [],
+    released: [],
+    graceUntil: 0,
     cursor: 0,
     wordStart: 0,
     wordStartTime: 0,
@@ -209,7 +237,10 @@ export function useInkRush(config: RushConfig, cb: Callbacks) {
       while (s.stream.length - s.cursor < BUFFER_TARGET) {
         const add = (s.stream.length ? ' ' : '') + randWord();
         s.stream += add;
-        for (let i = 0; i < add.length; i++) s.states.push('untyped');
+        for (let i = 0; i < add.length; i++) {
+          s.states.push('untyped');
+          s.released.push(false);
+        }
       }
     },
     [randWord],
@@ -222,6 +253,7 @@ export function useInkRush(config: RushConfig, cb: Callbacks) {
     const shift = cut + 1;
     s.stream = s.stream.slice(shift);
     s.states = s.states.slice(shift);
+    s.released = s.released.slice(shift);
     s.cursor -= shift;
     s.wordStart -= shift;
   }, []);
@@ -322,11 +354,43 @@ export function useInkRush(config: RushConfig, cb: Callbacks) {
     if (s.hearts <= 0) finishRun(s, false);
   }, [finishRun]);
 
+  /**
+   * Let go of a word that has already broken.
+   *
+   * Backspace is disabled and a broken word can no longer score, so making the
+   * player type out the rest of it is dead time with nothing at stake. This is
+   * not mercy — the heart and the halved multiplier were already taken. It only
+   * stops the punishment from being *boring* as well as costly.
+   *
+   * Deliberately not the same thing as the Quick Quill skip, which is proactive:
+   * that dodges a word you have *not* broken, and pays a cooldown for it.
+   */
+  const releaseWord = useCallback(
+    (s: GameState) => {
+      const end = wordEndAt(s.stream, s.cursor);
+      // Already at the space — the word is finished anyway, let it play out.
+      if (end <= s.cursor) return;
+
+      for (let i = s.cursor; i < end; i++) s.released[i] = true;
+      s.cursor = afterWord(s.stream, s.cursor);
+      s.words += 1;
+      s.wordDirty = false;
+      s.wordStart = s.cursor;
+      const now = performance.now();
+      s.wordStartTime = now;
+      s.graceUntil = now + RELEASE_GRACE_MS;
+    },
+    [],
+  );
+
   const press = useCallback(
     (char: string) => {
       const s = g.current;
       if (!s.running || s.over || s.cursor >= s.stream.length) return;
       const now = performance.now();
+      // Keys still in flight from the word we just released. Swallowed, not
+      // scored and not counted as mistakes — they were aimed at something else.
+      if (now < s.graceUntil) return;
       if (!s.started) {
         s.started = true;
         s.startTime = now;
@@ -345,21 +409,23 @@ export function useInkRush(config: RushConfig, cb: Callbacks) {
       const wasSpace = expected === ' ';
       s.cursor += 1;
       if (wasSpace && !s.over) finishWord(s, s.cursor - 1);
+      // A word that just broke is let go of straight away — but only once the
+      // run is still alive, so the last mistake of a run ends it rather than
+      // yanking the player forward into a stream they can no longer type.
+      if (!correct && !wasSpace && !s.over) releaseWord(s);
       if (!s.over) {
         refill(s);
         trim(s);
       }
       rerender();
     },
-    [applyMistake, finishWord, refill, trim, rerender],
+    [applyMistake, finishWord, releaseWord, refill, trim, rerender],
   );
 
   const skipWord = useCallback(
     (s: GameState) => {
       if (!s.running || s.over || s.cursor >= s.stream.length) return;
-      let end = s.stream.indexOf(' ', s.cursor);
-      if (end === -1) end = s.stream.length;
-      s.cursor = Math.min(s.stream.length, end + 1);
+      s.cursor = afterWord(s.stream, s.cursor);
       s.wordStart = s.cursor;
       s.wordStartTime = performance.now();
       s.wordDirty = false;
@@ -482,6 +548,7 @@ export function useInkRush(config: RushConfig, cb: Callbacks) {
     skipRemaining: f.quickQuill ? Math.max(0, (s.skipCooldownUntil - now) / 8000) : 0,
     stream: s.stream,
     states: s.states,
+    released: s.released,
     cursor: s.cursor,
   };
 

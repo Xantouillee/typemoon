@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { EngineSnapshot } from '../../engine/types';
 import type {
@@ -38,6 +38,13 @@ const SPRING: Record<SmoothCaret, { stiffness: number; damping: number } | null>
   medium: { stiffness: 1400, damping: 70 },
   fast: { stiffness: 2600, damping: 80 },
 };
+
+/**
+ * How long after the last keystroke the caret starts breathing again. Comfortably
+ * longer than the gap between characters at any human speed, so a burst of typing
+ * never lets a single fade begin.
+ */
+const REST_AFTER_MS = 900;
 
 /**
  * The typing surface. Renders each character with its state, marks errors with a
@@ -94,8 +101,25 @@ export function TypingArea({
     wordEnd = nextSpace === -1 ? target.length : nextSpace;
   }
 
+  /**
+   * The caret only pulses once you have stopped typing.
+   *
+   * Letting the 1.1 s fade run during a burst means the caret is dimming *and*
+   * springing between letters at the same time, which reads as flicker rather
+   * than as a blink — the faster you type, the worse it looks. Every text editor
+   * suppresses the blink the same way: it marks the caret's position while you
+   * work, and only breathes when you pause.
+   */
+  const [resting, setResting] = useState(false);
+  useEffect(() => {
+    setResting(false);
+    const id = window.setTimeout(() => setResting(true), REST_AFTER_MS);
+    return () => window.clearTimeout(id);
+  }, [cursor]);
+
   const spring = SPRING[smoothCaret];
   const showCaret = caretStyle !== 'off' && caret;
+  const pulse = focused && resting ? 'caretPulse 1.1s ease-in-out infinite' : 'none';
 
   /** The caret's shape, per style. `line` keeps the original pen nib. */
   const caretBody = () => {
@@ -109,7 +133,7 @@ export function TypingArea({
             height: '100%',
             background: outline ? 'transparent' : 'rgb(var(--accent) / 0.45)',
             border: outline ? '1.5px solid rgb(var(--accent))' : 'none',
-            animation: focused ? 'caretPulse 1.1s ease-in-out infinite' : 'none',
+            animation: pulse,
             opacity: focused ? 1 : 0.4,
           }}
         />
@@ -123,7 +147,7 @@ export function TypingArea({
             style={{
               height: 2,
               background: 'rgb(var(--accent))',
-              animation: focused ? 'caretPulse 1.1s ease-in-out infinite' : 'none',
+              animation: pulse,
               opacity: focused ? 1 : 0.4,
             }}
           />
@@ -138,7 +162,7 @@ export function TypingArea({
           style={{
             background: 'rgb(var(--accent))',
             boxShadow: '0 0 10px rgb(var(--accent) / 0.6)',
-            animation: focused ? 'caretPulse 1.1s ease-in-out infinite' : 'none',
+            animation: pulse,
             opacity: focused ? 1 : 0.4,
           }}
         />

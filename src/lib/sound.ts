@@ -256,16 +256,28 @@ const MELODIES: Record<string, { title: string; notes: number[] }> = {
   // semitone offsets from C4; negatives drop below it
   ode: {
     title: 'Ode to Joy · Beethoven',
+    // All four phrases: A, A′, the B section that steps down through the middle,
+    // then A′ again to close.
     notes: [
       4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 4, 2, 2,
+      4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 2, 0, 0,
+      2, 2, 4, 0, 2, 4, 5, 4, 0, 2, 4, 5, 4, 2, 0, 2, 7,
       4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 2, 0, 0,
     ],
   },
   elise: {
     title: 'Für Elise · Beethoven',
+    // The whole first period, the B section in C, and the return to the theme —
+    // so the tune actually arrives somewhere instead of circling its own opening.
     notes: [
-      16, 15, 16, 15, 16, 11, 14, 12, 9, 0, 4, 9, 11, 4, 8, 11, 12,
-      16, 15, 16, 15, 16, 11, 14, 12, 9, 0, 4, 9, 11, 4, 12, 11, 9,
+      16, 15, 16, 15, 16, 11, 14, 12, 9,
+      0, 4, 9, 11, 4, 8, 11, 12,
+      4, 16, 15, 16, 15, 16, 11, 14, 12, 9,
+      0, 4, 9, 11, 4, 12, 11, 9,
+      11, 12, 14, 16, 7, 17, 16, 14,
+      5, 16, 14, 12, 4, 14, 12, 11,
+      16, 15, 16, 15, 16, 11, 14, 12, 9,
+      0, 4, 9, 11, 4, 12, 11, 9,
     ],
   },
   twinkle: {
@@ -278,32 +290,51 @@ const MELODIES: Record<string, { title: string; notes: number[] }> = {
   },
   saints: {
     title: 'When the Saints · traditional',
+    // Verse, then the whole chorus, then the verse again.
     notes: [
       0, 4, 5, 7, 0, 4, 5, 7, 0, 4, 5, 7, 4, 0, 4, 2,
       4, 4, 2, 0, 0, 4, 7, 7, 5, 4, 5, 4, 0, 2, 0,
+      7, 7, 7, 5, 4, 4, 4, 0, 0, 2, 4, 5, 4, 2, 0,
+      0, 4, 5, 7, 0, 4, 5, 7, 0, 4, 5, 7, 4, 0, 4, 2,
+      4, 4, 2, 0, 0, 4, 7, 7, 5, 4, 2, 0,
     ],
   },
   canon: {
     title: 'Canon in D · Pachelbel',
+    // The descant over two full turns of the ground bass, then the running
+    // quaver variation everyone actually waits for.
     notes: [
       18, 16, 14, 13, 11, 9, 11, 13,
       14, 13, 11, 9, 7, 6, 7, 4,
       6, 2, 4, 1, 2, 6, 9, 7,
       18, 16, 14, 13, 11, 9, 11, 13,
       14, 13, 11, 9, 7, 6, 7, 6, 2,
+      14, 13, 14, 11, 9, 11, 13, 14,
+      16, 18, 16, 14, 13, 11, 13, 11,
+      9, 7, 9, 11, 13, 11, 9, 7,
+      6, 7, 9, 11, 13, 14, 16, 18,
+      21, 18, 16, 14, 13, 11, 9, 7,
+      6, 9, 7, 6, 2,
     ],
   },
   greensleeves: {
     title: 'Greensleeves · traditional',
+    // Both verses and both halves of the refrain — the tune only makes sense
+    // once the high G of "Greensleeves was my delight" has landed twice.
     notes: [
       -3, 0, 2, 4, 5, 4, 2, -1, -5, -3, -1, 0, -3, -3, -4, -3,
       -1, -4, -8, -3, 0, 2, 4, 5, 4, 2, -1, -5, -3, -1, 0, -3,
       -1, -4, -3, -3,
       7, 7, 5, 4, 2, -1, -5, -3, -1, 0, -3, -3, -4, -3, -1, -4, -8, -3,
+      7, 7, 5, 4, 2, -1, -5, -3, -1, 0, -3, -1, -4, -3, -3,
+      -3, 0, 2, 4, 5, 4, 2, -1, -5, -3, -1, 0, -3, -3, -4, -3,
+      -1, -4, -8, -3,
     ],
   },
   nachtmusik: {
     title: 'Eine kleine Nachtmusik · Mozart',
+    // Both halves of the opening subject, plus the scampering answer that
+    // follows it — the part that makes it sound like Mozart rather than a fanfare.
     notes: [
       -5, -10, -5, -10, -5, -1, 2,
       0, -3, 0, -3, 0, 4, -3,
@@ -311,10 +342,16 @@ const MELODIES: Record<string, { title: string; notes: number[] }> = {
       9, 9, 9, 11, 12, 14, 14,
       -5, -10, -5, -10, -5, -1, 2,
       0, -3, 0, -3, 0, 4, -3,
+      14, 12, 11, 9, 7, 6, 7, 9,
+      11, 9, 7, 6, 4, 2, 4, 6,
+      7, 6, 4, 2, 0, -1, 0, 2,
+      -5, -1, 2, 7, 2, -1, -5,
     ],
   },
   fate: {
     title: 'Symphony No. 5 · Beethoven',
+    // The motif driven through its rising sequence and back down — four notes
+    // are famous, but four notes are not a tune.
     notes: [
       7, 7, 7, 3, 5, 5, 5, 2,
       7, 7, 7, 3, 5, 5, 5, 2,
@@ -322,6 +359,12 @@ const MELODIES: Record<string, { title: string; notes: number[] }> = {
       12, 12, 12, 8, 10, 10, 10, 7,
       15, 15, 15, 12, 14, 14, 14, 10,
       7, 7, 7, 3,
+      3, 3, 3, 0, 2, 2, 2, -1,
+      5, 5, 5, 2, 3, 3, 3, 0,
+      8, 8, 8, 5, 7, 7, 7, 3,
+      12, 12, 12, 8, 10, 10, 10, 7,
+      15, 15, 15, 12, 19, 19, 19, 15,
+      12, 10, 8, 7, 3,
     ],
   },
   /**
@@ -339,6 +382,13 @@ const MELODIES: Record<string, { title: string; notes: number[] }> = {
       16, 17, 16, 14, 12, 14, 16, 17, 20,
       24, 23, 21, 20, 17, 16, 17, 16, 14, 12,
       21, 20, 17, 16, 20, 17, 16, 12, 16, 17, 16,
+      // second half: the same figure taken up a fourth, then walked home down
+      // the Andalusian cadence — A minor, G, F, E — that closes the mode
+      21, 22, 25, 26, 28, 26, 25, 22, 21,
+      21, 22, 21, 19, 17, 19, 21, 22, 25,
+      29, 28, 26, 25, 22, 21, 22, 21, 19, 17,
+      21, 20, 17, 16, 14, 12, 14, 16,
+      17, 16, 14, 12, 11, 12, 14, 16, 17, 16,
     ],
   },
   /**

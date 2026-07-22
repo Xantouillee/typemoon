@@ -303,20 +303,47 @@ Gates: `tsc -b` clean · **97/97** tests · build ~200 kB gzip.
 Six ideas from the user, assessed rather than accepted wholesale. Recommended order below;
 the reasoning is kept because it is the kind of thing that gets re-argued later.
 
-### A. Caret flicker — CONFIRMED BUG, do first
+### A. Caret flicker — FIXED ✅
 **Diagnosed:** `index.css:136` `caretPulse` fades the caret 1 → 0.35 → 1 on a 1.1 s loop and
 runs **continuously while focused**, never suppressed during typing. Typing fast means the
 caret is mid-fade *and* mid-spring-flight between letters at once → reads as flicker.
-**Fix:** suppress the pulse while keystrokes are recent (restart/hold the animation on each
-press, resume ~1 s after the last one) — what every text editor does. Small.
+**Fixed:** the caret only pulses once typing has stopped (`REST_AFTER_MS = 900`, reset on every
+cursor move). Practice only — the arcade caret never had a pulse, which is why the arcade never
+flickered.
 
-### B. Release a broken word — agreed, reframed
-Today: first mistake sets `wordDirty`, backspace is disabled, and **the player must still type
+### B. Release a broken word — DONE ✅
+Was: first mistake sets `wordDirty`, backspace is disabled, and **the player must still type
 out a word that can no longer score**. Dead time with no upside.
 **Not** "skip as a reward for failing" — that would soften the penalty the multiplier depends
 on. Instead: once broken, the word is *released*; you have already taken the hit and should not
 also be made to finish a corpse. The **Quick Quill** skip stays a distinct, proactive power
-(dodge a word you have not broken yet). Two different powers, both earn their place. Small.
+(dodge a word you have not broken yet). Two different powers, both earn their place.
+
+**What "smooth" turned out to require**, beyond the jump itself:
+- **A 220 ms grace window** where keystrokes are swallowed. Without it the feature actively
+  *hurts*: at 100 wpm a character lands every ~120 ms, so a fast typist has two keys already
+  committed to the word we just took away. Letting them land would break the next word too —
+  one mistake cascading into a second. Swallowed keys count as neither hits nor mistakes.
+- **The abandoned letters stay on screen, struck through in faded red**, so the jump reads as a
+  consequence rather than a glitch.
+- **No new sound.** `crack()`, the red flash and the shake already fire on the same keystroke;
+  a second cue 0 ms later would be mush.
+- **Never released on the run's last mistake** — the run ends, rather than yanking the player
+  forward into a stream they can no longer type.
+- Word-boundary math extracted to `wordEndAt` / `afterWord` in `scoring.ts`, shared with the
+  Quick Quill skip, **5 new tests**. The off-by-one around the space (landing *on* it rather
+  than past it) silently ruins the next word and would not have been caught by eye.
+
+### B2. Melodies play the whole piece — DONE ✅
+Asked for alongside A and B. The built-in tunes were 30–52-note fragments that looped before
+arriving anywhere. Now **62–89 notes each**: full phrase structure, second sections and real
+endings — Ode to Joy has all four phrases including the B section, Für Elise reaches the
+C-major middle and returns, Canon in D gets the running-quaver variation, Symphony No. 5 drives
+its motif through the whole rising sequence. Sirocco (the original) gained a second half up a
+fourth plus an Andalusian cadence home. *Twinkle stayed at 42 — already the complete song.*
+
+Cost of roughly doubling every tune: **+0.4 kB gzip.** Still nothing licensed; everything
+shipped remains public domain.
 
 ### C. Responsive pass — all PC screen sizes
 Overdue. Hardcoded sizing in `TypingArea` (`height: 10.5rem`, `maxWidth: 52rem`) does nothing
