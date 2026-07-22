@@ -224,7 +224,11 @@ export type SoundThemeId =
   | 'hitmarker'
   | 'bonk'
   | 'coin'
-  | 'fart';
+  | 'fart'
+  | 'ode'
+  | 'elise'
+  | 'twinkle'
+  | 'saints';
 
 interface SoundTheme {
   id: SoundThemeId;
@@ -234,7 +238,75 @@ interface SoundTheme {
   error(): void;
 }
 
+/**
+ * Melody voices: each keystroke plays the next note of a tune, so typing a
+ * sentence performs the piece. This deliberately breaks the stable-pitch-per-key
+ * rule the tactile voices follow — here the sequence *is* the point.
+ *
+ * Every tune below is long out of copyright: Beethoven died in 1827, and the
+ * other two are traditional. Nothing here is licensed from anyone.
+ */
+const MELODIES: Record<string, { title: string; notes: number[] }> = {
+  // semitone offsets from C4; negatives drop below it
+  ode: {
+    title: 'Ode to Joy · Beethoven',
+    notes: [4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 4, 2, 2],
+  },
+  elise: {
+    title: 'Für Elise · Beethoven',
+    notes: [16, 15, 16, 15, 16, 11, 14, 12, 9, 0, 4, 9, 11, 4, 8, 11, 12],
+  },
+  twinkle: {
+    title: 'Twinkle, Twinkle · traditional',
+    notes: [0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0],
+  },
+  saints: {
+    title: 'When the Saints · traditional',
+    notes: [0, 4, 5, 7, 0, 4, 5, 7, 0, 4, 5, 7, 4, 0, 4, 2],
+  },
+};
+
+/** Where each melody voice has got to. Advancing is the whole instrument. */
+const melodyStep: Record<string, number> = {};
+
+/** Build a voice that walks a tune, one note per keystroke. */
+function melodyVoice(id: SoundThemeId): SoundTheme {
+  const tune = MELODIES[id];
+  return {
+    id,
+    press(k, big) {
+      const { pan } = keyInfo(k);
+      // space is a rest that also resets the phrase, so each word starts the
+      // tune again rather than drifting somewhere unrecognisable
+      if (big) {
+        melodyStep[id] = 0;
+        tone({ freq: 196, dur: 0.12, gain: 0.05, type: 'sine', pan, wet: 0.4 });
+        return;
+      }
+      const i = melodyStep[id] ?? 0;
+      melodyStep[id] = (i + 1) % tune.notes.length;
+      const freq = 261.63 * Math.pow(2, tune.notes[i] / 12);
+      tone({ freq, dur: 0.42, gain: 0.11, type: 'triangle', attack: 0.006, pan, wet: 0.5 });
+      tone({ freq: freq * 2, dur: 0.14, gain: 0.028, type: 'sine', pan, wet: 0.5 });
+    },
+    release() {
+      /* a struck note rings out on its own */
+    },
+    error() {
+      // a sour semitone clash, and the phrase starts over
+      melodyStep[id] = 0;
+      tone({ freq: 233, dur: 0.2, gain: 0.09, type: 'triangle', wet: 0.4 });
+      tone({ freq: 247, dur: 0.2, gain: 0.07, type: 'triangle', wet: 0.4 });
+    },
+  };
+}
+
 const THEMES: Record<SoundThemeId, SoundTheme> = {
+  ode: melodyVoice('ode'),
+  elise: melodyVoice('elise'),
+  twinkle: melodyVoice('twinkle'),
+  saints: melodyVoice('saints'),
+
   /** The original dry wooden tick, kept so v1 still sounds like v1. */
   classic: {
     id: 'classic',
@@ -622,6 +694,7 @@ const THEMES: Record<SoundThemeId, SoundTheme> = {
 export const SOUND_TIERS: { id: string; voices: SoundThemeId[] }[] = [
   { id: 'tactile', voices: ['thock', 'petrichor', 'gloop', 'nib', 'wrap', 'typewriter', 'classic'] },
   { id: 'musical', voices: ['pentatonic', 'coin'] },
+  { id: 'melody', voices: ['ode', 'elise', 'twinkle', 'saints'] },
   { id: 'joke', voices: ['hitmarker', 'bonk', 'fart'] },
 ];
 
@@ -694,6 +767,26 @@ export const VOICE_META: Record<
     name: 'Fart',
     material: 'regrettable · wobble',
     wave: (x) => Math.exp(-x * 3) * Math.sin(x * 28 + Math.sin(x * 60) * 4),
+  },
+  ode: {
+    name: 'Ode to Joy',
+    material: 'Beethoven · 1824',
+    wave: (x) => Math.exp(-x * 1.8) * Math.sin(x * 30),
+  },
+  elise: {
+    name: 'Für Elise',
+    material: 'Beethoven · 1810',
+    wave: (x) => Math.exp(-x * 1.8) * Math.sin(x * 42),
+  },
+  twinkle: {
+    name: 'Twinkle, Twinkle',
+    material: 'traditional',
+    wave: (x) => Math.exp(-x * 1.8) * Math.sin(x * 22),
+  },
+  saints: {
+    name: 'The Saints',
+    material: 'traditional',
+    wave: (x) => Math.exp(-x * 1.8) * Math.sin(x * 26),
   },
 };
 
@@ -769,6 +862,22 @@ export function previewTheme(id: SoundThemeId) {
 
   clearPreview();
   const t = theme(id);
+
+  // A melody needs enough notes to be recognised, and has to start at the top of
+  // the phrase — two notes from somewhere in the middle identify nothing.
+  if (MELODIES[id]) {
+    melodyStep[id] = 0;
+    for (let i = 0; i < 7; i++) {
+      previewTimers.push(window.setTimeout(() => t.press('t', false), i * 230));
+    }
+    previewTimers.push(
+      window.setTimeout(() => {
+        melodyStep[id] = 0;
+      }, 7 * 230),
+    );
+    return;
+  }
+
   t.press('t', false);
   previewTimers.push(
     window.setTimeout(() => t.release('t'), 90),
