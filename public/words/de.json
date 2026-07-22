@@ -1,0 +1,26 @@
+{
+  "name": "Deutsch",
+  "code": "de",
+  "words": [
+    "der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem",
+    "eines", "einer", "und", "oder", "aber", "doch", "sondern", "denn", "als", "wie",
+    "wenn", "weil", "dass", "ob", "ich", "du", "er", "sie", "es", "wir",
+    "ihr", "mich", "dich", "sich", "uns", "euch", "mir", "dir", "ihm", "ihnen",
+    "mein", "dein", "sein", "unser", "euer", "nicht", "kein", "keine", "keinen", "auch",
+    "nur", "noch", "schon", "sehr", "so", "mehr", "immer", "wieder", "hier", "da",
+    "dort", "jetzt", "dann", "heute", "morgen", "gestern", "haben", "werden", "können", "müssen",
+    "sollen", "wollen", "mögen", "dürfen", "machen", "gehen", "kommen", "sehen", "wissen", "sagen",
+    "geben", "nehmen", "finden", "bleiben", "liegen", "stehen", "lassen", "halten", "bringen", "fragen",
+    "brauchen", "glauben", "denken", "sprechen", "arbeiten", "spielen", "leben", "sterben", "fühlen", "hören",
+    "verstehen", "kennen", "lernen", "beginnen", "versuchen", "zeigen", "erzählen", "schreiben", "lesen", "laufen",
+    "fahren", "fliegen", "essen", "trinken", "schlafen", "kaufen", "verkaufen", "suchen", "warten", "öffnen",
+    "schließen", "für", "mit", "ohne", "gegen", "durch", "um", "nach", "von", "aus",
+    "bei", "seit", "über", "unter", "vor", "hinter", "neben", "zwischen", "an", "auf",
+    "in", "zu", "zum", "zur", "wo", "was", "wer", "wen", "wem", "wessen",
+    "wann", "warum", "welche", "welcher", "welches", "alle", "alles", "allen", "jeder", "jede",
+    "jedes", "viel", "viele", "wenig", "wenige", "groß", "klein", "gut", "schlecht", "neu",
+    "alt", "jung", "lang", "kurz", "hoch", "tief", "schön", "wichtig", "richtig", "falsch",
+    "ganz", "mensch", "mann", "frau", "kind", "jahr", "tag", "zeit", "welt", "hand",
+    "kopf", "wort", "weg", "haus", "land", "stadt", "wasser", "nacht", "arbeit", "licht"
+  ]
+}

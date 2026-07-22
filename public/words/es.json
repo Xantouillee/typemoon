@@ -1,0 +1,26 @@
+{
+  "name": "Español",
+  "code": "es",
+  "words": [
+    "el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del",
+    "a", "al", "en", "y", "o", "que", "es", "son", "era", "eran",
+    "ser", "estar", "tener", "hacer", "decir", "ir", "ver", "dar", "saber", "querer",
+    "llegar", "pasar", "deber", "poner", "parecer", "quedar", "creer", "hablar", "llevar", "dejar",
+    "seguir", "encontrar", "llamar", "venir", "pensar", "salir", "volver", "tomar", "conocer", "vivir",
+    "sentir", "mirar", "contar", "empezar", "esperar", "buscar", "existir", "entrar", "trabajar", "escribir",
+    "perder", "entender", "pedir", "recibir", "recordar", "terminar", "permitir", "aparecer", "conseguir", "comenzar",
+    "servir", "sacar", "necesitar", "mantener", "resultar", "leer", "caer", "cambiar", "presentar", "crear",
+    "abrir", "considerar", "oír", "acabar", "convertir", "ganar", "formar", "traer", "partir", "morir",
+    "aceptar", "realizar", "suponer", "comprender", "lograr", "explicar", "preguntar", "tocar", "reconocer", "estudiar",
+    "yo", "tú", "él", "ella", "usted", "nosotros", "vosotros", "ellos", "ellas", "me",
+    "te", "se", "nos", "os", "le", "les", "lo", "mi", "mis", "tu",
+    "tus", "su", "sus", "nuestro", "nuestra", "nuestros", "nuestras", "este", "esta", "estos",
+    "estas", "ese", "esa", "esos", "esas", "aquel", "aquella", "aquellos", "aquellas", "qué",
+    "quién", "cuál", "cómo", "cuándo", "dónde", "cuánto", "porque", "pero", "aunque", "si",
+    "no", "sí", "muy", "más", "menos", "también", "todavía", "ya", "siempre", "nunca",
+    "aquí", "allí", "ahora", "entonces", "así", "tan", "tanto", "mucho", "poco", "todo",
+    "todos", "toda", "todas", "otro", "otra", "otros", "otras", "mismo", "misma", "cada",
+    "algo", "alguien", "nada", "nadie", "alguno", "ninguno", "tiempo", "año", "día", "vez",
+    "hombre", "mujer", "vida", "mano", "parte", "mundo", "casa", "agua", "país", "momento"
+  ]
+}

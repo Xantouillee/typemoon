@@ -1,0 +1,26 @@
+{
+  "name": "Français",
+  "code": "fr",
+  "words": [
+    "le", "la", "les", "un", "une", "des", "du", "de", "au", "aux",
+    "ce", "cet", "cette", "ces", "mon", "ma", "mes", "ton", "ta", "tes",
+    "son", "sa", "ses", "notre", "nos", "votre", "vos", "leur", "leurs", "quel",
+    "quelle", "quels", "quelles", "chaque", "tout", "toute", "tous", "toutes", "aucun", "aucune",
+    "plusieurs", "quelque", "quelques", "je", "tu", "il", "elle", "on", "nous", "vous",
+    "ils", "elles", "me", "te", "se", "lui", "y", "en", "moi", "toi",
+    "soi", "eux", "celui", "celle", "ceux", "celles", "qui", "que", "quoi", "dont",
+    "où", "être", "avoir", "faire", "dire", "pouvoir", "aller", "voir", "savoir", "vouloir",
+    "venir", "devoir", "prendre", "trouver", "donner", "falloir", "parler", "mettre", "passer", "penser",
+    "croire", "arriver", "entendre", "demander", "rester", "répondre", "sembler", "laisser", "tenir", "connaître",
+    "paraître", "regarder", "suivre", "sentir", "montrer", "comprendre", "sortir", "attendre", "et", "à",
+    "dans", "par", "pour", "sur", "avec", "sans", "sous", "entre", "vers", "chez",
+    "depuis", "pendant", "avant", "après", "contre", "comme", "si", "ne", "pas", "plus",
+    "moins", "très", "bien", "mal", "aussi", "encore", "toujours", "jamais", "déjà", "alors",
+    "ainsi", "donc", "mais", "ou", "quand", "tant", "ici", "là", "non", "oui",
+    "peut", "temps", "an", "année", "jour", "fois", "chose", "homme", "femme", "monde",
+    "vie", "main", "part", "moment", "personne", "point", "yeux", "tête", "cœur", "mot",
+    "vrai", "grand", "petit", "bon", "nouveau", "dernier", "même", "premier", "jeune", "seul",
+    "propre", "haut", "long", "beau", "fort", "certain", "autre", "autres", "rien", "tel",
+    "telle", "vraiment", "assez", "trop", "pourquoi", "comment", "cependant", "pourtant", "gens", "ans"
+  ]
+}

@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   THE MANUSCRIPT — design tokens
+   Two cohesive themes built on the craft of writing:
+   ink, paper, letterpress, proofreader's marks.
+   ============================================================ */
+:root {
+  /* Ink on Cream (light) */
+  --paper: 242 236 221;      /* warm parchment  */
+  --paper-2: 235 226 206;    /* deeper page      */
+  --ink: 32 27 20;           /* near-black warm ink */
+  --ink-soft: 107 97 82;     /* muted (untyped) */
+  --ink-faint: 168 158 138;  /* faintest        */
+  --accent: 190 61 45;       /* editor's vermilion */
+  --accent-2: 176 141 76;    /* aged brass       */
+  --error: 179 45 39;        /* proof-mark red   */
+  --gold: 176 141 76;
+  --line: 32 27 20;          /* hairlines (used w/ low alpha) */
+  --grain-opacity: 0.045;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  /* Midnight Ink (dark) */
+  --paper: 25 20 16;         /* warm near-black */
+  --paper-2: 33 27 22;
+  --ink: 237 230 214;        /* paper-white text */
+  --ink-soft: 150 138 120;
+  --ink-faint: 92 83 71;
+  --accent: 224 106 79;      /* warmer vermilion for dark */
+  --accent-2: 201 165 100;
+  --error: 224 106 79;
+  --gold: 201 165 100;
+  --line: 237 230 214;
+  --grain-opacity: 0.06;
+  color-scheme: dark;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: rgb(var(--paper));
+  color: rgb(var(--ink));
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Paper grain — a subtle tactile texture layered over everything */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+:root[data-theme='dark'] body::before {
+  mix-blend-mode: screen;
+}
+
+/* ---- proof-mark: a hand-drawn red correction underline for errors ---- */
+.proof-underline {
+  text-decoration: none;
+  background-image: linear-gradient(
+    to right,
+    rgb(var(--error) / 0.9) 0%,
+    rgb(var(--error) / 0.9) 100%
+  );
+  background-repeat: repeat-x;
+  background-size: 6px 2px;
+  background-position: 0 1.05em;
+}
+
+/* selection */
+::selection {
+  background: rgb(var(--accent) / 0.22);
+}
+
+/* thin, elegant scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--ink-faint)) transparent;
+}
+
+/* focus ring in-keeping with theme */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent) / 0.6);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes caretPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* small caps label helper */
+.eyebrow {
+  font-family: 'Hanken Grotesk', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgb(var(--ink-soft));
+}

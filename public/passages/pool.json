@@ -1,0 +1,132 @@
+{
+  "passages": [
+    {
+      "id": "austen-pride-and-prejudice",
+      "title": "Pride and Prejudice",
+      "author": "Jane Austen",
+      "language": "en",
+      "year": 1813,
+      "text": "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife. However little known the feelings or views of such a man may be on his first entering a neighbourhood, this truth is so well fixed in the minds of the surrounding families, that he is considered as the rightful property of some one or other of their daughters."
+    },
+    {
+      "id": "dickens-tale-of-two-cities",
+      "title": "A Tale of Two Cities",
+      "author": "Charles Dickens",
+      "language": "en",
+      "year": 1859,
+      "text": "It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity, it was the season of Light, it was the season of Darkness, it was the spring of hope, it was the winter of despair, we had everything before us, we had nothing before us, we were all going direct to Heaven, we were all going direct the other way."
+    },
+    {
+      "id": "dickens-great-expectations",
+      "title": "Great Expectations",
+      "author": "Charles Dickens",
+      "language": "en",
+      "year": 1861,
+      "text": "My father's family name being Pirrip, and my Christian name Philip, my infant tongue could make of both names nothing longer or more explicit than Pip. So, I called myself Pip, and came to be called Pip. I give Pirrip as my father's family name, on the authority of his tombstone and my sister, Mrs. Joe Gargery, who married the blacksmith. As I never saw my father or my mother, and never saw any likeness of either of them, my first fancies regarding what they were like, were unreasonably derived from their tombstones."
+    },
+    {
+      "id": "melville-moby-dick",
+      "title": "Moby-Dick",
+      "author": "Herman Melville",
+      "language": "en",
+      "year": 1851,
+      "text": "Call me Ishmael. Some years ago, never mind how long precisely, having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation."
+    },
+    {
+      "id": "shelley-frankenstein",
+      "title": "Frankenstein",
+      "author": "Mary Shelley",
+      "language": "en",
+      "year": 1818,
+      "text": "It was on a dreary night of November that I beheld the accomplishment of my toils. With an anxiety that almost amounted to agony, I collected the instruments of life around me, that I might infuse a spark of being into the lifeless thing that lay at my feet. It was already one in the morning; the rain pattered dismally against the panes, and my candle was nearly burnt out, when, by the glimmer of the half-extinguished light, I saw the dull yellow eye of the creature open; it breathed hard, and a convulsive motion agitated its limbs."
+    },
+    {
+      "id": "carroll-alice-in-wonderland",
+      "title": "Alice's Adventures in Wonderland",
+      "author": "Lewis Carroll",
+      "language": "en",
+      "year": 1865,
+      "text": "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'"
+    },
+    {
+      "id": "doyle-sherlock-holmes",
+      "title": "The Adventures of Sherlock Holmes",
+      "author": "Arthur Conan Doyle",
+      "language": "en",
+      "year": 1892,
+      "text": "To Sherlock Holmes she is always the woman. I have seldom heard him mention her under any other name. In his eyes she eclipses and predominates the whole of her sex. It was not that he felt any emotion akin to love for Irene Adler. All emotions, and that one particularly, were abhorrent to his cold, precise but admirably balanced mind. He was, I take it, the most perfect reasoning and observing machine that the world has seen, but as a lover he would have placed himself in a false position."
+    },
+    {
+      "id": "stoker-dracula",
+      "title": "Dracula",
+      "author": "Bram Stoker",
+      "language": "en",
+      "year": 1897,
+      "text": "His face was a strong, a very strong, aquiline, with high bridge of the thin nose and peculiarly arched nostrils; with lofty domed forehead, and hair growing scantily round the temples, but profusely elsewhere. His eyebrows were very massive, almost meeting over the nose, and with bushy hair that seemed to curl in its own profusion. The mouth, so far as I could see it under the heavy moustache, was fixed and rather cruel-looking, with peculiarly sharp white teeth; these protruded over the lips, whose remarkable ruddiness showed astonishing vitality in a man of his years."
+    },
+    {
+      "id": "hugo-les-miserables",
+      "title": "Les Misérables",
+      "author": "Victor Hugo",
+      "language": "fr",
+      "year": 1862,
+      "text": "En 1815, M. Charles-François-Bienvenu Myriel était évêque de Digne. C'était un vieillard d'environ soixante-quinze ans; il occupait le siège de Digne depuis 1806. Quoique ce détail ne touche en aucune manière au fond même de ce que nous avons à raconter, il n'est peut-être pas inutile, ne fût-ce que pour être exact en tout, d'indiquer ici les bruits et les propos qui avaient couru sur son compte au moment où il était arrivé dans le diocèse."
+    },
+    {
+      "id": "flaubert-madame-bovary",
+      "title": "Madame Bovary",
+      "author": "Gustave Flaubert",
+      "language": "fr",
+      "year": 1857,
+      "text": "Nous étions à l'étude, quand le proviseur entra, suivi d'un nouveau habillé en bourgeois et d'un garçon de classe qui portait un grand pupitre. Ceux qui dormaient se réveillèrent, et chacun se leva comme surpris dans son travail. Le proviseur nous fit signe de nous rasseoir; puis, se tournant vers le maître d'études : «Monsieur Roger, lui dit-il à demi-voix, voici un élève que je vous recommande, il entre en cinquième.»"
+    },
+    {
+      "id": "voltaire-candide",
+      "title": "Candide",
+      "author": "Voltaire",
+      "language": "fr",
+      "year": 1759,
+      "text": "Il y avait en Westphalie, dans le château de M. le baron de Thunder-ten-tronckh, un jeune garçon à qui la nature avait donné les mœurs les plus douces. Sa physionomie annonçait son âme. Il avait le jugement assez droit, avec l'esprit le plus simple; c'est, je crois, pour cette raison qu'on le nommait Candide. Les anciens domestiques de la maison soupçonnaient qu'il était fils de la sœur de monsieur le baron et d'un bon et honnête gentilhomme du voisinage, que cette demoiselle ne voulut jamais épouser."
+    },
+    {
+      "id": "cervantes-don-quijote",
+      "title": "Don Quijote de la Mancha",
+      "author": "Miguel de Cervantes",
+      "language": "es",
+      "year": 1605,
+      "text": "En un lugar de la Mancha, de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía un hidalgo de los de lanza en astillero, adarga antigua, rocín flaco y galgo corredor. Una olla de algo más vaca que carnero, salpicón las más noches, duelos y quebrantos los sábados, lantejas los viernes, algún palomino de añadidura los domingos, consumían las tres partes de su hacienda."
+    },
+    {
+      "id": "becquer-rima-liii",
+      "title": "Rima LIII",
+      "author": "Gustavo Adolfo Bécquer",
+      "language": "es",
+      "year": 1871,
+      "text": "Volverán las oscuras golondrinas en tu balcón sus nidos a colgar, y otra vez con el ala a sus cristales jugando llamarán. Pero aquellas que el vuelo refrenaban tu hermosura y mi dicha a contemplar, aquellas que aprendieron nuestros nombres, ésas... ¡no volverán! Volverán las tupidas madreselvas de tu jardín las tapias a escalar, y otra vez a la tarde aún más hermosas sus flores se abrirán."
+    },
+    {
+      "id": "clarin-la-regenta",
+      "title": "La Regenta",
+      "author": "Leopoldo Alas «Clarín»",
+      "language": "es",
+      "year": 1884,
+      "text": "La heroica ciudad dormía la siesta. El viento sur, caliente y perezoso, empujaba las nubes blanquecinas que se rasgaban al correr hacia el Norte. En las calles no había más ruido que el rumor estridente de los remolinos de polvo, trapos, pajas y papeles que iban de arroyo en arroyo, de acera en acera, de esquina en esquina revolando y persiguiéndose, como mariposas que se buscan y huyen y que el aire envuelve en sus pliegues invisibles."
+    },
+    {
+      "id": "kafka-die-verwandlung",
+      "title": "Die Verwandlung",
+      "author": "Franz Kafka",
+      "language": "de",
+      "year": 1915,
+      "text": "Als Gregor Samsa eines Morgens aus unruhigen Träumen erwachte, fand er sich in seinem Bett zu einem ungeheueren Ungeziefer verwandelt. Er lag auf seinem panzerartig harten Rücken und sah, wenn er den Kopf ein wenig hob, seinen gewölbten, braunen, von bogenförmigen Versteifungen geteilten Bauch, auf dessen Höhe sich die Bettdecke, zum gänzlichen Niedergleiten bereit, kaum noch erhalten konnte. Seine vielen, im Vergleich zu seinem sonstigen Umfang kläglich dünnen Beine flimmerten ihm hilflos vor den Augen."
+    },
+    {
+      "id": "goethe-werther",
+      "title": "Die Leiden des jungen Werthers",
+      "author": "Johann Wolfgang von Goethe",
+      "language": "de",
+      "year": 1774,
+      "text": "Wie froh bin ich, daß ich weg bin! Bester Freund, was ist das Herz des Menschen! Dich zu verlassen, den ich so liebe, von dem ich unzertrennlich war, und froh zu sein! Ich weiß, du verzeihst mir's. Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das meine zu ängstigen? Die arme Leonore! Und doch war ich unschuldig. Konnt ich dafür, daß, während die eigensinnigen Reize ihrer Schwester mir eine angenehme Unterhaltung verschafften, eine Leidenschaft in dem armen Herzen sich bildete?"
+    }
+  ]
+}
