@@ -72,6 +72,8 @@ const en: Dict = {
   backToArcade: 'Back to arcade',
   pressEnterNewRun: 'for a new run',
   footer: 'Typemoon · public-domain passages via Project Gutenberg · built for the love of letters',
+  notesRead: '{n} notes read',
+  notesRejected: 'not understood: {list}',
 };
 
 const fr: Dict = {
@@ -143,6 +145,8 @@ const fr: Dict = {
   backToArcade: 'Retour à l’arcade',
   pressEnterNewRun: 'pour une nouvelle partie',
   footer: 'Typemoon · textes du domaine public via le Projet Gutenberg · fait par amour des lettres',
+  notesRead: '{n} notes lues',
+  notesRejected: 'non compris : {list}',
 };
 
 const es: Dict = {
@@ -214,6 +218,8 @@ const es: Dict = {
   backToArcade: 'Volver al arcade',
   pressEnterNewRun: 'para una nueva partida',
   footer: 'Typemoon · pasajes de dominio público vía Proyecto Gutenberg · hecho por amor a las letras',
+  notesRead: '{n} notas leídas',
+  notesRejected: 'no entendido: {list}',
 };
 
 const de: Dict = {
@@ -285,6 +291,8 @@ const de: Dict = {
   backToArcade: 'Zurück zur Arcade',
   pressEnterNewRun: 'für einen neuen Lauf',
   footer: 'Typemoon · gemeinfreie Textstellen via Project Gutenberg · aus Liebe zu den Buchstaben',
+  notesRead: '{n} Noten gelesen',
+  notesRejected: 'nicht verstanden: {list}',
 };
 
 /** Exported so a test can prove no language has silently fallen behind English. */

@@ -2,12 +2,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
   DEFAULT_SOUND_THEME,
+  setCustomMelody,
   setSoundVolume,
   type ErrorSoundId,
   type SoundThemeId,
 } from '../lib/sound';
 import type { Confidence, Difficulty, StopOnError } from '../engine/types';
 import { backgroundMeta, type BackgroundId } from '../lib/backgrounds';
+import { parseMelody } from '../lib/melody';
 
 export type Theme = 'light' | 'dark' | 'caramel';
 
@@ -42,6 +44,12 @@ interface SettingsState {
   soundVolume: number;
   errorSound: ErrorSoundId;
   timeWarning: number;
+  /**
+   * A tune the user typed in themselves, in the notation `lib/melody.ts` reads.
+   * Stored here and nowhere else: it never leaves the browser, and nothing that
+   * ships with Typemoon depends on it.
+   */
+  customMelody: string;
 
   // typing behaviour
   difficulty: Difficulty;
@@ -100,6 +108,7 @@ const DEFAULTS = {
   soundVolume: 0.7,
   errorSound: 'voice' as ErrorSoundId,
   timeWarning: 0,
+  customMelody: '',
 
   difficulty: 'normal' as Difficulty,
   stopOnError: 'off' as StopOnError,
@@ -142,9 +151,14 @@ export const useSettings = create<SettingsState>()(
       toggleBgVisible: () => set((s) => ({ bgVisible: !s.bgVisible })),
       set: (key, value) => {
         if (key === 'soundVolume') setSoundVolume(value as number);
+        // the audio layer holds the parsed notes; the store holds what you wrote
+        if (key === 'customMelody') setCustomMelody(parseMelody(value as string).notes);
         set({ [key]: value } as Partial<SettingsState>);
       },
-      reset: () => set({ ...DEFAULTS }),
+      reset: () => {
+        setCustomMelody([]);
+        set({ ...DEFAULTS });
+      },
     }),
     {
       name: 'typemoon-settings',
@@ -164,8 +178,10 @@ export const useSettings = create<SettingsState>()(
         return s;
       },
       onRehydrateStorage: () => (state) => {
-        // the audio graph is created lazily, so push the stored volume into it
-        if (state) setSoundVolume(state.soundVolume);
+        // the audio graph is created lazily, so push the stored settings into it
+        if (!state) return;
+        setSoundVolume(state.soundVolume);
+        setCustomMelody(parseMelody(state.customMelody ?? '').notes);
       },
     },
   ),

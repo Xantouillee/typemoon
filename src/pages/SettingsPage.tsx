@@ -15,9 +15,10 @@ import {
   timeWarning as playTimeWarning,
   type SoundThemeId,
 } from '../lib/sound';
-import { t } from '../i18n/strings';
+import { t, tf } from '../i18n/strings';
 import { copy, type OptId, type SectionId } from '../i18n/copy';
 import { BACKGROUNDS, MAX_SCRIM, MIN_SCRIM, backgroundUrl } from '../lib/backgrounds';
+import { parseMelody } from '../lib/melody';
 
 /**
  * The preview text, per language.
@@ -246,6 +247,63 @@ function VoicePicker() {
   );
 }
 
+/**
+ * Where you put a tune of your own.
+ *
+ * Everything Typemoon ships is public domain on purpose. This is the other half
+ * of that bargain: your keyboard, your tune, stored in your browser and nowhere
+ * else. It parses as you type and tells you what it understood.
+ */
+function CustomMelody() {
+  const s = useSettings();
+  const c = copy(s.language);
+  const parsed = useMemo(() => parseMelody(s.customMelody), [s.customMelody]);
+
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      <textarea
+        value={s.customMelody}
+        onChange={(e) => s.set('customMelody', e.target.value.slice(0, 4000))}
+        spellCheck={false}
+        rows={3}
+        placeholder="e e f g | g f e d | c c d e"
+        className="w-full rounded-sm px-3 py-2 font-mono text-[13px] resize-y outline-none"
+        style={{
+          background: 'rgb(var(--ink) / 0.04)',
+          border: '1px solid rgb(var(--ink) / 0.14)',
+          color: 'rgb(var(--ink))',
+        }}
+      />
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          onClick={() => {
+            s.setSoundTheme('custom');
+            if (!s.sound) s.toggleSound();
+            previewTheme('custom');
+          }}
+          disabled={parsed.notes.length === 0}
+          className="px-3 py-1.5 rounded-full font-sans text-[12px] font-semibold transition-colors"
+          style={{
+            background: parsed.notes.length ? 'rgb(var(--accent))' : 'rgb(var(--ink) / 0.08)',
+            color: parsed.notes.length ? 'rgb(var(--paper))' : 'rgb(var(--ink-faint))',
+            cursor: parsed.notes.length ? 'pointer' : 'not-allowed',
+          }}
+        >
+          ▶ {c.customPlay}
+        </button>
+        <span className="font-mono text-[11px]" style={{ color: 'rgb(var(--ink-faint))' }}>
+          {tf(s.language, 'notesRead', { n: parsed.notes.length })}
+        </span>
+        {parsed.rejected.length > 0 && (
+          <span className="font-mono text-[11px]" style={{ color: 'rgb(var(--error))' }}>
+            {tf(s.language, 'notesRejected', { list: parsed.rejected.slice(0, 6).join(' ') })}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Backdrop cards, each showing the real GIF behind the real scrim. */
 function BackdropPicker() {
   const s = useSettings();
@@ -420,6 +478,9 @@ export function SettingsPage() {
                 }}
                 options={ERROR_SOUND_IDS.map((id) => ({ value: id, label: o(id as OptId) }))}
               />
+            </Row>
+            <Row {...c.rows.customMelody} wide>
+              <CustomMelody />
             </Row>
             <Row {...c.rows.timeWarning}>
               <Choice

@@ -246,6 +246,37 @@ the conclusions and the resulting policy:
   user must supply the files. **~1h of work. This ends the argument permanently.**
 - Also declined earlier, same reasoning: sourcing pornographic ("ahegao") audio rips.
 
+## v2.8 — your own tune, and one original — BUILT (pending sign-off)
+Asked for Gerudo Valley (Koji Kondo, 1998, Nintendo). Declined, and this is the
+precedent for every future "can you add <song>":
+
+- The **composition** is the copyrighted work here, not just a recording. Encoding a
+  melody as semitone offsets is still reproducing the melody, and melody is the most
+  strongly protected element of a musical work. This is *not* the osu case, where the
+  code was genuinely MIT and only the audio assets were encumbered — there is no
+  clean half to take.
+- Nintendo enforces against fan arrangements harder than almost any rights holder.
+- Both reasons bite specifically because the repo is public and may be monetised.
+
+Built instead, in the same session:
+
+1. **`custom` voice — "Your own tune".** A note-name parser (`lib/melody.ts`) and a
+   text field in the sound settings. Notation: `c d e f g a b`, `c# eb`, octaves
+   `a3 c5` (4 = middle C), bare integers as semitone offsets, bars/commas ignored.
+   Reports what it read and what it could not (`15 notes read · not understood: oops`)
+   rather than failing silently. Stored in `localStorage` via the settings store,
+   parsed into the audio layer on rehydrate. **Never uploaded, never committed** —
+   this is the escape hatch agreed in the licensing decision below, now real.
+   Whatever the user plays on their own machine is their business; what Typemoon
+   *ships* stays public domain.
+2. **`sirocco` — an original.** Not a transcription. Written for this app in E
+   Phrygian dominant (E F G# A B C D), the scale that makes flamenco guitar sound
+   like flamenco guitar: rising figure, turn, cascade, Andalusian cadence. The
+   desert-guitar *idiom* is nobody's property; any particular tune in it is.
+
+22 voices now. `tsc` clean · **86/86** tests (11 new, all on the parser — the `b`
+note vs `b` flat ambiguity is the one place the notation can trip over itself).
+
 ## UX AUDIT — 16 findings (2026-07-22) — THE WORK QUEUE
 Full walkthrough as a new user. **Next task: work through these.**
 User's stated priority = readability and a slick, self-evident experience.

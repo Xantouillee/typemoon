@@ -232,7 +232,9 @@ export type SoundThemeId =
   | 'canon'
   | 'greensleeves'
   | 'nachtmusik'
-  | 'fate';
+  | 'fate'
+  | 'sirocco'
+  | 'custom';
 
 interface SoundTheme {
   id: SoundThemeId;
@@ -322,7 +324,46 @@ const MELODIES: Record<string, { title: string; notes: number[] }> = {
       7, 7, 7, 3,
     ],
   },
+  /**
+   * Not a transcription of anything — an original line written for this app, in
+   * E Phrygian dominant (E F G# A B C D), the scale that makes flamenco guitar
+   * sound like flamenco guitar. Rising figure, turn, cascade, Andalusian cadence.
+   *
+   * It exists because the desert-guitar *idiom* is nobody's property, while any
+   * particular tune in it very much is.
+   */
+  sirocco: {
+    title: 'Sirocco · original',
+    notes: [
+      16, 17, 20, 21, 23, 21, 20, 17, 16,
+      16, 17, 16, 14, 12, 14, 16, 17, 20,
+      24, 23, 21, 20, 17, 16, 17, 16, 14, 12,
+      21, 20, 17, 16, 20, 17, 16, 12, 16, 17, 16,
+    ],
+  },
+  /**
+   * Your own tune. Empty until you type one into the settings page; the notes
+   * are filled in by `setCustomMelody` and live only in your browser.
+   */
+  custom: { title: 'Your own tune', notes: [] },
 };
+
+/**
+ * Install a tune the user entered themselves.
+ *
+ * Everything Typemoon *ships* is public domain, deliberately. This is the other
+ * side of that line: whatever you put here stays in your own browser storage, is
+ * never uploaded and is never committed to the repository.
+ */
+export function setCustomMelody(notes: number[]) {
+  MELODIES.custom.notes = notes.slice(0, 512);
+  melodyStep.custom = 0;
+}
+
+/** How many notes the custom tune currently holds. */
+export function customMelodyLength(): number {
+  return MELODIES.custom.notes.length;
+}
 
 /**
  * Where each melody voice has got to.
@@ -353,7 +394,13 @@ function melodyVoice(id: SoundThemeId): SoundTheme {
         tone({ freq: 196, dur: 0.12, gain: 0.04, type: 'sine', pan, wet: 0.4 });
         return;
       }
-      const i = melodyStep[id] ?? 0;
+      // the custom tune is empty until someone writes one — a soft tick beats
+      // both silence (which reads as broken) and NaN (which reads as a crash)
+      if (tune.notes.length === 0) {
+        tone({ freq: 330, dur: 0.1, gain: 0.05, type: 'triangle', pan, wet: 0.4 });
+        return;
+      }
+      const i = (melodyStep[id] ?? 0) % tune.notes.length;
       melodyStep[id] = (i + 1) % tune.notes.length;
       const freq = 261.63 * Math.pow(2, tune.notes[i] / 12);
       tone({ freq, dur: 0.42, gain: 0.11, type: 'triangle', attack: 0.006, pan, wet: 0.5 });
@@ -380,6 +427,8 @@ const THEMES: Record<SoundThemeId, SoundTheme> = {
   greensleeves: melodyVoice('greensleeves'),
   nachtmusik: melodyVoice('nachtmusik'),
   fate: melodyVoice('fate'),
+  sirocco: melodyVoice('sirocco'),
+  custom: melodyVoice('custom'),
 
   /** The original dry wooden tick, kept so v1 still sounds like v1. */
   classic: {
@@ -770,7 +819,18 @@ export const SOUND_TIERS: { id: string; voices: SoundThemeId[] }[] = [
   { id: 'musical', voices: ['pentatonic', 'coin'] },
   {
     id: 'melody',
-    voices: ['ode', 'elise', 'canon', 'greensleeves', 'nachtmusik', 'fate', 'twinkle', 'saints'],
+    voices: [
+      'ode',
+      'elise',
+      'canon',
+      'greensleeves',
+      'nachtmusik',
+      'fate',
+      'sirocco',
+      'twinkle',
+      'saints',
+      'custom',
+    ],
   },
   { id: 'joke', voices: ['hitmarker', 'bonk', 'fart'] },
 ];
@@ -884,6 +944,16 @@ export const VOICE_META: Record<
     name: 'Fate (Symphony No. 5)',
     material: 'Beethoven · 1808',
     wave: (x) => Math.exp(-x * 2.6) * Math.sin(x * 18 + Math.sin(x * 46) * 2),
+  },
+  sirocco: {
+    name: 'Sirocco',
+    material: 'original · phrygian',
+    wave: (x) => Math.exp(-x * 1.5) * Math.sin(x * 52 - x * x * 26),
+  },
+  custom: {
+    name: 'Your own tune',
+    material: 'yours · never uploaded',
+    wave: (x) => Math.exp(-x * 1.8) * Math.sin(x * 28) * Math.cos(x * 6),
   },
 };
 

@@ -26,6 +26,7 @@ export type RowId =
   | 'volume'
   | 'errorSound'
   | 'timeWarning'
+  | 'customMelody'
   | 'difficulty'
   | 'stopOnError'
   | 'confidence'
@@ -92,6 +93,7 @@ export interface Copy {
   previewFailedExpert: string;
   previewWarning: string;
   previewRestart: string;
+  customPlay: string;
   sections: Record<SectionId, { title: string; blurb: string }>;
   rows: Record<RowId, RowCopy>;
   opt: Record<OptId, string>;
@@ -108,6 +110,7 @@ const en: Copy = {
   previewFailedExpert: 'Expert: that word went in with a mistake in it.',
   previewWarning: 'That tick is your time warning.',
   previewRestart: 'restart the sample',
+  customPlay: 'Play it',
   sections: {
     sound: { title: 'Sound', blurb: 'How the keyboard feels in your ears.' },
     typing: {
@@ -140,6 +143,11 @@ const en: Copy = {
     timeWarning: {
       label: 'Time warning',
       hint: 'A double tick shortly before a timed test runs out, so the end never ambushes you.',
+    },
+    customMelody: {
+      label: 'Your own tune',
+      hint: 'Write a melody and it becomes a keyboard voice — one note per letter, like the others.',
+      tip: 'Notes as letters: c d e f g a b · sharps and flats: c# eb · octaves: a3 c5 (4 is middle C) · bars and commas are ignored. It is saved in this browser only — never uploaded, never part of the site.',
     },
     difficulty: {
       label: 'Difficulty',
@@ -256,6 +264,7 @@ const fr: Copy = {
   previewFailedExpert: 'Expert : ce mot est passé avec une faute dedans.',
   previewWarning: 'Ce tic-tac, c’est votre alerte de temps.',
   previewRestart: 'relancer l’exemple',
+  customPlay: 'Écouter',
   sections: {
     sound: { title: 'Son', blurb: 'Ce que le clavier fait à vos oreilles.' },
     typing: {
@@ -288,6 +297,11 @@ const fr: Copy = {
     timeWarning: {
       label: 'Alerte de temps',
       hint: 'Un double tic peu avant la fin d’un test chronométré, pour que la fin ne vous surprenne jamais.',
+    },
+    customMelody: {
+      label: 'Votre propre air',
+      hint: 'Écrivez une mélodie et elle devient une voix de clavier — une note par lettre, comme les autres.',
+      tip: 'Les notes en lettres : c d e f g a b · dièses et bémols : c# eb · octaves : a3 c5 (4 = do central) · barres et virgules ignorées. Enregistré dans ce navigateur uniquement — jamais envoyé, jamais intégré au site.',
     },
     difficulty: {
       label: 'Difficulté',
@@ -404,6 +418,7 @@ const es: Copy = {
   previewFailedExpert: 'Experto: esa palabra ha pasado con un error dentro.',
   previewWarning: 'Ese tic es tu aviso de tiempo.',
   previewRestart: 'reiniciar el ejemplo',
+  customPlay: 'Escuchar',
   sections: {
     sound: { title: 'Sonido', blurb: 'Cómo suena el teclado en tus oídos.' },
     typing: {
@@ -436,6 +451,11 @@ const es: Copy = {
     timeWarning: {
       label: 'Aviso de tiempo',
       hint: 'Un doble tic poco antes de que termine una prueba cronometrada, para que el final no te sorprenda.',
+    },
+    customMelody: {
+      label: 'Tu propia melodía',
+      hint: 'Escribe una melodía y se convierte en una voz de teclado: una nota por letra, como las demás.',
+      tip: 'Notas en letras: c d e f g a b · sostenidos y bemoles: c# eb · octavas: a3 c5 (4 = do central) · barras y comas se ignoran. Se guarda solo en este navegador: nunca se sube, nunca forma parte del sitio.',
     },
     difficulty: {
       label: 'Dificultad',
@@ -552,6 +572,7 @@ const de: Copy = {
   previewFailedExpert: 'Experte: dieses Wort ging mit einem Fehler durch.',
   previewWarning: 'Dieses Ticken ist deine Zeitwarnung.',
   previewRestart: 'Beispiel neu starten',
+  customPlay: 'Anhören',
   sections: {
     sound: { title: 'Klang', blurb: 'Wie sich die Tastatur in deinen Ohren anfühlt.' },
     typing: {
@@ -584,6 +605,11 @@ const de: Copy = {
     timeWarning: {
       label: 'Zeitwarnung',
       hint: 'Ein doppeltes Ticken kurz vor Ablauf eines Zeittests, damit dich das Ende nie überrumpelt.',
+    },
+    customMelody: {
+      label: 'Deine eigene Melodie',
+      hint: 'Schreib eine Melodie, und sie wird zu einer Tastaturstimme — eine Note pro Buchstabe, wie bei den anderen.',
+      tip: 'Noten als Buchstaben: c d e f g a b · Kreuze und Bes: c# eb · Oktaven: a3 c5 (4 ist das eingestrichene C) · Taktstriche und Kommas werden ignoriert. Wird nur in diesem Browser gespeichert — nie hochgeladen, nie Teil der Seite.',
     },
     difficulty: {
       label: 'Schwierigkeit',
