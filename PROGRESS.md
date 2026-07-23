@@ -493,8 +493,20 @@ reuses the leaderboard (`mode='daily'` + `today`).
       line, and, signed in, **"#N on today's page"** via `fetchTodayRank`. Mobile shows the streak.
 - [x] A **hand-drawn flame** (no emoji tofu) in the ink/paper palette. Translated EN/FR/ES/DE.
 
-**Next (agreed order):** B — the auto-content cron (a scheduled GitHub Action re-running
-`build-daily-pool.ts` to grow `pool.json`), then the stashed responsive pass.
+## v4.3 — auto-growing daily content — SHIPPED (2026-07-23)
+- [x] **Bigger, more beloved curation** — ~36 famous public-domain books (Gatsby, Jane Eyre,
+      Sherlock, Dracula, Wuthering Heights, Odyssey, Faust, Trois Mousquetaires, Don Quijote,
+      Grimm…), **several passages each** with unique ids, so the pool grows: **16 → 141**
+      (en 96 / fr 24 / es 8 / de 13). Passages start on a clean sentence, front-matter screened.
+- [x] **CI-safe builder** — validates each Gutenberg id against Gutendex's own `language` + title
+      before trusting it; a wrong id is skipped, never mislabeled (caught 5 bad ids). `FRESH=1`
+      rebuilds; default merges so a transient fetch failure never wipes committed passages.
+- [x] **`refresh-passages.yml`** — a weekly (+ manual) Action re-runs the builder and commits
+      `pool.json` when it changed; the push then deploys. Growing it = editing the book list.
+- **⚠ Needs once:** repo **Settings → Actions → General → Workflow permissions → Read and write**
+      so the cron can push. `es` pool is thin (8) — add a few Spanish titles when convenient.
+
+**Next (agreed order):** the stashed responsive pass.
 
 ## Also fixed (2026-07-23)
 - **Spam-crackle** — fast typing summed overlapping notes past 1.0 and the destination
