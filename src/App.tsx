@@ -13,20 +13,21 @@ import { t } from './i18n/strings';
 
 /**
  * A phone can't drive the desktop typing surface (it reads physical key events),
- * so a touch visitor landing on the practice page is sent to the touch-first
- * experience — once per session, and only for a coarse pointer on a narrow
- * screen, so it never hijacks desktop and a tap on the logo can still get back.
+ * so any touch visitor landing on the practice page is sent to the touch-first
+ * experience. It fires only for a coarse pointer on a narrow screen, so it never
+ * hijacks desktop — and because the touch pages (history, leaderboard) reach the
+ * practice route through the shared header logo, redirecting every time is what
+ * lets that logo mean "back to typing" on a phone instead of stranding it on the
+ * unusable desktop surface.
  */
 function TouchRedirect() {
   const loc = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
     if (loc.pathname !== '/') return;
-    if (sessionStorage.getItem('touchModeSeen')) return;
     const coarse = window.matchMedia?.('(pointer: coarse)').matches;
     const narrow = window.innerWidth < 820;
     if (coarse && narrow) {
-      sessionStorage.setItem('touchModeSeen', '1');
       navigate('/play', { replace: true });
     }
   }, [loc.pathname, navigate]);

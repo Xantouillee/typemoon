@@ -1,7 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useSettings, THEMES, type Theme } from '../../store/settings';
 import { SOUND_TIERS, VOICE_META, previewTheme, type SoundThemeId } from '../../lib/sound';
 import { t } from '../../i18n/strings';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import { avatarUrl, displayName, useAuth } from '../../store/auth';
 
 interface Props {
   open: boolean;
@@ -24,6 +27,8 @@ const THEME_SWATCH: Record<Theme, { paper: string; ink: string; accent: string }
 export function MobileSettings({ open, onClose }: Props) {
   const s = useSettings();
   const lang = s.language;
+  const { status, user, profile, signIn, signOut } = useAuth();
+  const signedIn = status === 'signed-in';
 
   return (
     <AnimatePresence>
@@ -67,6 +72,64 @@ export function MobileSettings({ open, onClose }: Props) {
             </div>
 
             <div className="px-5 pb-2 space-y-6">
+              {/* GO — the phone's overlay hides the desktop header, so the only
+                  way to the other pages lives here */}
+              <div className="flex gap-2">
+                <NavPill to="/play" label={t(lang, 'practice')} onClose={onClose} />
+                <NavPill to="/history" label={t(lang, 'history')} onClose={onClose} />
+                {isSupabaseConfigured && (
+                  <NavPill to="/leaderboard" label={t(lang, 'leaderboard')} onClose={onClose} />
+                )}
+              </div>
+
+              {/* ACCOUNT */}
+              {isSupabaseConfigured && (
+                <Section label={t(lang, 'account')}>
+                  {signedIn ? (
+                    <div className="flex items-center gap-3">
+                      <MiniAvatar url={avatarUrl(user, profile)} name={displayName(user, profile)} />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-display font-semibold truncate" style={{ color: 'rgb(var(--ink))' }}>
+                          {displayName(user, profile)}
+                        </div>
+                        <div className="text-[11px] truncate" style={{ color: 'rgb(var(--ink-faint))' }}>
+                          {user?.email}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => void signOut()}
+                        className="px-3 py-1.5 rounded-full text-[12px] font-medium shrink-0"
+                        style={{ background: 'rgb(var(--ink) / 0.06)', color: 'rgb(var(--ink-soft))' }}
+                      >
+                        {t(lang, 'signOut')}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-[12.5px] leading-snug" style={{ color: 'rgb(var(--ink-soft))' }}>
+                        {t(lang, 'signInBlurb')}
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => void signIn('google')}
+                          className="flex-1 py-2.5 rounded-xl text-[13px] font-medium"
+                          style={{ background: 'rgb(var(--ink) / 0.05)', border: '1px solid rgb(var(--ink) / 0.1)', color: 'rgb(var(--ink))' }}
+                        >
+                          {t(lang, 'continueGoogle')}
+                        </button>
+                        <button
+                          onClick={() => void signIn('github')}
+                          className="flex-1 py-2.5 rounded-xl text-[13px] font-medium"
+                          style={{ background: 'rgb(var(--ink) / 0.05)', border: '1px solid rgb(var(--ink) / 0.1)', color: 'rgb(var(--ink))' }}
+                        >
+                          {t(lang, 'continueGitHub')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </Section>
+              )}
+
               {/* THEME */}
               <Section label={t(lang, 'theme')}>
                 <div className="flex gap-2.5">
@@ -186,6 +249,33 @@ export function MobileSettings({ open, onClose }: Props) {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function NavPill({ to, label, onClose }: { to: string; label: string; onClose: () => void }) {
+  return (
+    <Link
+      to={to}
+      onClick={onClose}
+      className="flex-1 text-center py-2.5 rounded-xl text-[13px] font-sans font-medium transition-colors"
+      style={{ background: 'rgb(var(--ink) / 0.05)', color: 'rgb(var(--ink))' }}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function MiniAvatar({ url, name }: { url: string | null; name: string }) {
+  if (url) {
+    return <img src={url} alt="" width={36} height={36} className="rounded-full object-cover shrink-0" style={{ width: 36, height: 36 }} />;
+  }
+  return (
+    <span
+      className="grid place-items-center rounded-full font-display font-semibold shrink-0"
+      style={{ width: 36, height: 36, fontSize: 16, background: 'rgb(var(--accent) / 0.15)', color: 'rgb(var(--accent))' }}
+    >
+      {name.charAt(0).toUpperCase()}
+    </span>
   );
 }
 

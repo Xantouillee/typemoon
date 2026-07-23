@@ -27,6 +27,8 @@ import type { TestResult } from '../engine/types';
 import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
 import { submitScore } from '../lib/leaderboard';
 import { ordinal, t, tf } from '../i18n/strings';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { avatarUrl, displayName, useAuth } from '../store/auth';
 
 // The same five modes the desktop offers, so the phone is at parity.
 const MODES: Mode[] = ['time', 'words', 'quote', 'daily', 'zen'];
@@ -36,6 +38,7 @@ export function MobilePage() {
   const lang = s.language;
   const appHeight = useViewportHeight();
   const navigate = useNavigate();
+  const { status, user, profile } = useAuth();
 
   const [target, setTarget] = useState('');
   const [source, setSource] = useState<Passage | null>(null);
@@ -182,6 +185,33 @@ export function MobilePage() {
           >
             {s.theme === 'dark' ? <IconSun /> : <IconMoon />}
           </button>
+          {isSupabaseConfigured && (
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="grid place-items-center w-9 h-9 rounded-full overflow-hidden"
+              style={{ color: 'rgb(var(--ink))' }}
+              aria-label={t(lang, 'account')}
+            >
+              {status === 'signed-in' ? (
+                (() => {
+                  const url = avatarUrl(user, profile);
+                  const name = displayName(user, profile);
+                  return url ? (
+                    <img src={url} alt="" width={26} height={26} className="rounded-full object-cover" style={{ width: 26, height: 26 }} />
+                  ) : (
+                    <span
+                      className="grid place-items-center rounded-full font-display font-semibold"
+                      style={{ width: 26, height: 26, fontSize: 12, background: 'rgb(var(--accent) / 0.15)', color: 'rgb(var(--accent))' }}
+                    >
+                      {name.charAt(0).toUpperCase()}
+                    </span>
+                  );
+                })()
+              ) : (
+                <IconUser />
+              )}
+            </button>
+          )}
           <button
             onClick={() => setSettingsOpen(true)}
             className="grid place-items-center w-9 h-9 rounded-full"
@@ -491,6 +521,14 @@ function IconShareSmall() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
       <path d="M12 3v13M12 3 8 7M12 3l4 4" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconUser() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M5 20a7 7 0 0 1 14 0" strokeLinecap="round" />
     </svg>
   );
 }
