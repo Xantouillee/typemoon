@@ -373,6 +373,83 @@ opens a slick card and a "beat it" button drops them into the exact same run.
 
 Gates: `tsc -b` clean · **117/117** tests · `vite build` ~209 kB gzip.
 
+## v4.0 — accounts, global leaderboard & lifetime stats — BUILT (needs Supabase setup to switch on)
+The first backend track. An **optional** Supabase layer adds Google/GitHub accounts,
+cross-device stats, and a global leaderboard — while the site stays a static GitHub Pages
+build and, with no keys configured, byte-for-byte the old no-account app. Everything gates
+on `isSupabaseConfigured` (presence of the two `VITE_SUPABASE_*` env vars). Backend choice:
+**Supabase** (Postgres + Auth + RLS, free tier, client SDK from the static site, no lock-in
+— just Postgres for when we deploy a real server later). Sign-in: **Google + GitHub OAuth**.
+
+Local, no-backend (works today, ships regardless of Supabase):
+- [x] **`lib/aggregate.ts`** (pure, **12 tests**) — rolls the run history into lifetime
+      numbers: current & longest **streak** (local-calendar day runs), **keys tapped**
+      (Σ charsTyped), **time typed**, **days active**, avg WPM/accuracy, best WPM, favourite
+      mode. `formatCount` / `formatDuration` helpers.
+- [x] **History tab redesigned** (`pages/StatsPage.tsx`) — 8-tile lifetime grid (streak tile
+      accented) + longest-streak/favourite caption, on top of the existing sparkline + recent
+      list. Reads local runs when signed out, cloud runs when signed in (so stats follow you
+      across devices).
+
+Cloud, Supabase-gated:
+- [x] **`lib/supabase.ts`** — env-gated client, **PKCE flow** (deliberate: returns `?code=`
+      in the query string, not a `#access_token` fragment, which would collide with the
+      HashRouter). `isSupabaseConfigured`, `authRedirectTo()`. Client is `null` when unconfigured.
+- [x] **`store/auth.ts`** — Zustand auth store subscribing to `onAuthStateChange`; Google/
+      GitHub sign-in, sign out, `setUsername`, `displayName`/`avatarUrl` helpers. Self-inits
+      only when configured.
+- [x] **`components/Chrome/AccountMenu.tsx`** — header account dropdown (sign-in choices, or
+      avatar + rename + sign out + leaderboard link). Renders `null` when unconfigured.
+- [x] **`lib/leaderboard.ts`** — `submitScore` (fires after every finished run; no-op unless
+      signed in), `fetchLeaderboard` (best-run-per-user via the `get_leaderboard` RPC),
+      `fetchMyRuns` (own cloud runs mapped to `RunRecord` so the *same* `aggregate()` draws
+      them). Periods: today / week / month / all, filterable by mode + language.
+- [x] **`pages/LeaderboardPage.tsx`** + `/leaderboard` route + header nav link — period tabs,
+      mode/language filter chips, ranked rows with own-row highlight; "warming up" when
+      unconfigured, "sign in to compete" when signed out.
+- [x] **Score submission** wired into `TestPage` and `MobilePage` `onFinish`.
+- [x] **`supabase/schema.sql`** — `profiles` + `scores` tables, RLS (read-all, write-own),
+      a `handle_new_user` trigger that mints a unique username on sign-up, and the
+      `get_leaderboard(since, mode, language, limit)` SQL function. Idempotent.
+- [x] **Docs & wiring** — `SUPABASE_SETUP.md` (step-by-step), `.env.example`, deploy workflow
+      passes optional `SUPABASE_URL` / `SUPABASE_ANON_KEY` repo secrets, README updated. All
+      four UI languages carry the ~28 new strings (strings-parity test enforces it).
+
+Mobile follow-up (the phone overlay covers the desktop header, so account/history/leaderboard
+were unreachable there):
+- [x] **Mobile settings sheet** (`components/Mobile/MobileSettings.tsx`) opens with a nav row
+      (practice/history/leaderboard) + an account block (OAuth sign-in / profile + sign out).
+- [x] **Mobile top bar** (`pages/MobilePage.tsx`) gains an account button (avatar or person
+      icon) that opens the sheet — sign-in discoverable at a glance.
+- [x] **`TouchRedirect`** now sends a phone to `/play` **every time** it hits `/` (dropped the
+      once-per-session guard) so the shared header logo reliably means "back to typing" from
+      the history/leaderboard pages instead of stranding it on the desktop surface.
+
+Gates: `tsc -b` clean · **129/129** tests · `vite build` ~237 kB gzip (Supabase SDK adds weight).
+
+### ▶ TO CONTINUE THIS FEATURE (read first when resuming)
+**Branch:** `claude/leaderboard-feature-architecture-e8r5xl` — pushed, **not merged to `main`**.
+GitHub Pages deploys from `main`, so none of this is live yet.
+
+**Why sign-in still looks "missing":** the account UI only appears once Supabase is configured.
+Until the env keys exist it is hidden on **every** device by design — nothing is broken.
+
+**What the USER must do (I can't — needs your Supabase account):** follow `SUPABASE_SETUP.md`:
+1. Create a free Supabase project.
+2. Run `supabase/schema.sql` in its SQL editor.
+3. Enable Google + GitHub providers; add redirect URLs (localhost + the Pages URL).
+4. Add keys — `.env.local` for dev (`cp .env.example .env.local`), and repo secrets
+   `SUPABASE_URL` / `SUPABASE_ANON_KEY` for the live build.
+5. Merge the branch to `main` to ship it (or open a PR first).
+
+**Known follow-ups (not yet done):**
+- **Anti-cheat** — scores POST straight from the browser; a determined user can fake one. Fine
+  for launch/friends. For a competitive public board, move the insert behind a Supabase Edge
+  Function that re-validates a run and tighten the `scores` insert policy. Schema is ready.
+- **Bundle weight** — the Supabase SDK loads eagerly (Header → AccountMenu → store → client).
+  Could lazy-load the whole account layer to keep the typing page featherweight (~+150 kB gzip).
+- Rename/username edit exists on desktop; mobile sheet only shows sign-out (add rename if wanted).
+
 ## UX AUDIT — 16 findings (2026-07-22) — THE WORK QUEUE
 Full walkthrough as a new user. **Next task: work through these.**
 User's stated priority = readability and a slick, self-evident experience.
@@ -432,7 +509,8 @@ A shop to spend earned ink between pages; more Quills & boss gimmicks; VS multip
 
 ## Deferred (later / other tracks)
 - Real-time VS multiplayer (WebSocket rooms) or async "ghost" race
-- Accounts, cloud sync, global/daily leaderboards
+- ~~Accounts, cloud sync, global/daily leaderboards~~ → **BUILT in v4.0** (needs Supabase
+  setup to switch on; see that section). Remaining: server-side score validation.
 - More languages, Dvorak/Colemak, Keybr-style adaptive weak-key drills
 
 ## Run it
