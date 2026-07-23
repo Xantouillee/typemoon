@@ -299,6 +299,43 @@ already exist as a `.mid` somewhere on disk, so now you can just drop one in.
 
 Gates: `tsc -b` clean · **97/97** tests · build ~200 kB gzip.
 
+## v3.0 — a touch-first mode for phones — BUILT (pending sign-off)
+The whole app read input from physical `keydown` events on a focusable `<div>` — which a
+phone soft keyboard cannot drive (a div never raises the keyboard, and Android GBoard sends
+keyCode 229 with no usable `key`). So mobile got a **separate input road** at `/play`, while
+the engine, word lists, themes and history stay shared.
+
+- [x] **`mobile/inputDiff.ts`** — a pure reconciler. A soft keyboard's only trustworthy
+      signal is the field's `value` before and after each `input` event, so instead of reading
+      keystrokes we diff old → new into `{backspaces, inserts}`. Autocorrect, predictive
+      multi-char commits, and paste all funnel through one function that turns "teh " → "the "
+      into delete-then-retype — an honest correction the engine already understands.
+      **10 unit tests**, including a property check that the delta rebuilds `next` from `prev`.
+- [x] **`useMobileTyping`** — the mobile twin of `useTypingTest`: an off-screen `<input>`
+      (16px so iOS doesn't zoom, every autocorrect affordance stripped) feeds the shared
+      `TypingEngine` through `inputDiff`. Correctness is asked of the engine's exported
+      `charMatches` — never re-decided locally, the bug this repo already warned about. Owns a
+      `ready → running → done` state machine, the countdown clock, and start/stop/restart.
+      A touchscreen has no key-up, so a quick `releaseKey` is faked 55 ms after each press so
+      press-and-release voices still get both halves.
+- [x] **`useViewportHeight`** — sizes the app to `visualViewport.height`, the one measure that
+      excludes the space the keyboard covers, so **the panel and controls always sit above the
+      keyboard** rather than behind it (the "panel at the correct size" problem `100vh` causes).
+- [x] **`MobilePage` + `MobileTypingArea`** — a full-height, self-contained experience: mode
+      chips (25 words · 30s · 60s), a live WPM/timer readout, a big tap-to-scroll typing panel
+      with a solid current-character highlight (no measured caret to misfire on reflow), and
+      thumb-sized Start / Stop / Restart controls with a safe-area inset. Results overlay shows
+      WPM, accuracy, time and the same history-ranked verdict as desktop; runs save to the same
+      Dexie table under `words 25` / `time 30` / `time 60` so they group with desktop history.
+- [x] **Discovery** — a touch visitor on `/` is sent to `/play` once per session (coarse
+      pointer + narrow screen only, so desktop is untouched and the logo still navigates back);
+      a phone icon in the header reaches it from anywhere.
+- [x] **Verified in a real (phone-emulated) browser** — auto-redirect, per-keystroke typing, a
+      mistake corrected by backspace staying in sync (99.2%), a clean run (100%), and restart
+      via "again" — no console errors.
+
+Gates: `tsc -b` clean · **107/107** tests (97 + 10 inputDiff) · `vite build` ~204 kB gzip.
+
 ## UX AUDIT — 16 findings (2026-07-22) — THE WORK QUEUE
 Full walkthrough as a new user. **Next task: work through these.**
 User's stated priority = readability and a slick, self-evident experience.

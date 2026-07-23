@@ -1,0 +1,413 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { useSettings, toSpeedUnit } from '../store/settings';
+import { useMobileTyping } from '../hooks/useMobileTyping';
+import { useViewportHeight } from '../hooks/useViewportHeight';
+import { MobileTypingArea } from '../components/Mobile/MobileTypingArea';
+import { generateWords } from '../engine/textGen';
+import { LANGUAGES, loadWords } from '../lib/content';
+import type { TestResult } from '../engine/types';
+import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
+import { ordinal, t, tf } from '../i18n/strings';
+
+type Mode = 'words25' | 'time30' | 'time60';
+
+const MODES: { id: Mode; timeLimit?: number; words: number; label: (lang: string) => string }[] = [
+  { id: 'words25', words: 25, label: (l) => `25 ${t(l, 'words')}` },
+  { id: 'time30', timeLimit: 30, words: 120, label: () => '30s' },
+  { id: 'time60', timeLimit: 60, words: 240, label: () => '60s' },
+];
+
+/** The mode string used for history/verdicts — kept identical to the desktop
+ *  `modeLabel` format so a run typed on a phone ranks against the same cohort. */
+function modeKey(m: Mode): string {
+  if (m === 'words25') return 'words 25';
+  if (m === 'time30') return 'time 30';
+  return 'time 60';
+}
+
+export function MobilePage() {
+  const s = useSettings();
+  const lang = s.language;
+  const appHeight = useViewportHeight();
+
+  const [mode, setMode] = useState<Mode>('words25');
+  const [target, setTarget] = useState('');
+  const [nonce, setNonce] = useState(0);
+  const [result, setResult] = useState<TestResult | null>(null);
+  const [verdict, setVerdict] = useState<RunVerdict | null>(null);
+
+  const modeCfg = useMemo(() => MODES.find((m) => m.id === mode)!, [mode]);
+
+  // Build the text whenever the mode, language, options or "new" nonce change.
+  useEffect(() => {
+    let alive = true;
+    setResult(null);
+    setVerdict(null);
+    (async () => {
+      const words = await loadWords(lang);
+      if (!alive) return;
+      setTarget(
+        generateWords(words, {
+          count: modeCfg.words,
+          punctuation: s.punctuation,
+          numbers: s.numbers,
+        }),
+      );
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [mode, lang, s.punctuation, s.numbers, nonce, modeCfg.words]);
+
+  const onFinish = useCallback(
+    (r: TestResult) => {
+      setResult(r);
+      if (r.charsTyped === 0) return;
+      const mk = modeKey(mode);
+      void (async () => {
+        // rank before saving so the run does not compete with itself
+        setVerdict(await judgeRun(r.wpm, mk, lang));
+        await saveRun(r, mk, lang);
+      })();
+    },
+    [mode, lang],
+  );
+
+  const typing = useMobileTyping(target, {
+    timeLimit: modeCfg.timeLimit,
+    sound: s.sound,
+    soundTheme: s.soundTheme,
+    errorSound: s.errorSound,
+    lazy: s.lazy,
+    onFinish,
+  });
+
+  const newText = useCallback(() => setNonce((n) => n + 1), []);
+  const again = useCallback(() => {
+    setResult(null);
+    setVerdict(null);
+    typing.restart();
+  }, [typing]);
+
+  const progressWords = useMemo(() => {
+    if (mode !== 'words25') return null;
+    const done = target.slice(0, typing.snapshot.cursor).split(' ').filter(Boolean).length;
+    return `${Math.min(modeCfg.words, done)}/${modeCfg.words}`;
+  }, [mode, target, typing.snapshot.cursor, modeCfg.words]);
+
+  const liveWpm = toSpeedUnit(typing.snapshot.wpm, s.speedUnit);
+
+  return (
+    <div
+      className="fixed inset-0 z-40 flex flex-col overflow-hidden"
+      style={{
+        height: appHeight || undefined,
+        background: 'rgb(var(--paper))',
+        color: 'rgb(var(--ink))',
+      }}
+    >
+      {/* Off-screen field that actually receives the soft-keyboard input. Kept
+          16px so iOS does not zoom on focus, and stripped of every autocorrect
+          affordance so what you type is what the engine scores. */}
+      <input
+        {...typing.inputProps}
+        type="text"
+        inputMode="text"
+        autoCapitalize="off"
+        autoCorrect="off"
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={t(lang, 'mobileTitle')}
+        className="absolute opacity-0 pointer-events-none"
+        style={{ bottom: 0, left: 0, height: 1, width: 1, fontSize: 16, border: 0, padding: 0 }}
+      />
+
+      {/* top bar */}
+      <div className="shrink-0 flex items-center justify-between px-4 pt-3 pb-1">
+        <Link to="/" className="font-display font-black tracking-tight" style={{ fontSize: '1.15rem' }}>
+          Type<span style={{ color: 'rgb(var(--accent))' }}>moon</span>
+        </Link>
+        <div className="flex items-center gap-1">
+          <select
+            value={lang}
+            onChange={(e) => s.setLanguage(e.target.value)}
+            className="bg-transparent text-[13px] font-medium rounded-full px-2 py-1.5 outline-none"
+            style={{ color: 'rgb(var(--ink-soft))' }}
+            aria-label="language"
+          >
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code} style={{ color: '#000' }}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={s.toggleSound}
+            className="grid place-items-center w-9 h-9 rounded-full"
+            style={{ color: s.sound ? 'rgb(var(--ink))' : 'rgb(var(--ink-faint))' }}
+            aria-label="toggle sound"
+          >
+            {s.sound ? <IconSound /> : <IconSoundOff />}
+          </button>
+          <button
+            onClick={s.toggleTheme}
+            className="grid place-items-center w-9 h-9 rounded-full"
+            style={{ color: 'rgb(var(--ink))' }}
+            aria-label="toggle theme"
+          >
+            {s.theme === 'dark' ? <IconSun /> : <IconMoon />}
+          </button>
+        </div>
+      </div>
+
+      {/* mode chips */}
+      <div className="shrink-0 flex items-center justify-center gap-1.5 px-4 py-2">
+        {MODES.map((m) => {
+          const on = m.id === mode;
+          return (
+            <button
+              key={m.id}
+              onClick={() => setMode(m.id)}
+              className="px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+              style={{
+                color: on ? 'rgb(var(--paper))' : 'rgb(var(--ink-soft))',
+                background: on ? 'rgb(var(--accent))' : 'rgb(var(--ink) / 0.06)',
+              }}
+            >
+              {m.label(lang)}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* live readout */}
+      <div
+        className="shrink-0 flex items-center justify-between px-5 h-8 font-mono text-[13px]"
+        style={{ color: 'rgb(var(--ink-soft))' }}
+      >
+        <span className="tabular-nums">
+          {typing.remaining != null ? (
+            <span
+              className="font-display font-semibold"
+              style={{
+                fontSize: '1.15rem',
+                color: typing.phase === 'running' ? 'rgb(var(--accent))' : 'rgb(var(--ink-soft))',
+              }}
+            >
+              {typing.remaining}s
+            </span>
+          ) : (
+            progressWords
+          )}
+        </span>
+        {typing.phase !== 'ready' && (
+          <span className="tabular-nums">
+            {liveWpm} <span style={{ color: 'rgb(var(--ink-faint))' }}>{s.speedUnit}</span>
+          </span>
+        )}
+      </div>
+
+      {/* the typing panel fills the space that is left above the keyboard */}
+      <div className="flex-1 min-h-0 px-3 pb-2 relative">
+        <div className="w-full h-full max-w-2xl mx-auto relative">
+          <MobileTypingArea snapshot={typing.snapshot} fontScale={s.fontSize} onTap={typing.start} />
+
+          {/* keyboard dropped mid-run — invite a tap to bring it back */}
+          {typing.phase === 'running' && !typing.keyboardUp && !result && (
+            <button
+              onClick={typing.start}
+              className="absolute inset-0 grid place-items-center rounded-2xl"
+              style={{ background: 'rgb(var(--paper) / 0.55)', backdropFilter: 'blur(2px)' }}
+            >
+              <span
+                className="px-4 py-2 rounded-full text-sm font-medium"
+                style={{ background: 'rgb(var(--ink) / 0.08)', color: 'rgb(var(--ink))' }}
+              >
+                {t(lang, 'tapToResume')}
+              </span>
+            </button>
+          )}
+
+          {/* results */}
+          <AnimatePresence>
+            {result && (
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 grid place-items-center rounded-2xl px-4"
+                style={{ background: 'rgb(var(--paper) / 0.96)' }}
+              >
+                <div className="text-center w-full">
+                  <div
+                    className="font-display font-black leading-none"
+                    style={{ fontSize: 'clamp(3.5rem, 22vw, 6rem)', color: 'rgb(var(--accent))' }}
+                  >
+                    {toSpeedUnit(result.wpm, s.speedUnit)}
+                  </div>
+                  <div className="eyebrow mt-1">{s.speedUnit}</div>
+
+                  <div
+                    className="flex items-center justify-center gap-6 mt-5 font-mono text-sm"
+                    style={{ color: 'rgb(var(--ink-soft))' }}
+                  >
+                    <span>
+                      <span style={{ color: 'rgb(var(--ink))' }}>{result.accuracy}%</span>{' '}
+                      {t(lang, 'accuracy')}
+                    </span>
+                    <span>
+                      <span style={{ color: 'rgb(var(--ink))' }}>{result.timeSeconds}s</span>{' '}
+                      {t(lang, 'time')}
+                    </span>
+                  </div>
+
+                  {verdict && (
+                    <p className="mt-4 text-[13px] px-2" style={{ color: 'rgb(var(--ink-soft))' }}>
+                      {verdictText(verdict, lang, modeKey(mode), s.speedUnit, result.wpm)}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-center gap-2.5 mt-7">
+                    <button
+                      onClick={again}
+                      className="px-6 py-3 rounded-full text-sm font-semibold"
+                      style={{ background: 'rgb(var(--accent))', color: 'rgb(var(--paper))' }}
+                    >
+                      {t(lang, 'again')}
+                    </button>
+                    <button
+                      onClick={newText}
+                      className="px-6 py-3 rounded-full text-sm font-semibold"
+                      style={{ background: 'rgb(var(--ink) / 0.08)', color: 'rgb(var(--ink))' }}
+                    >
+                      {t(lang, 'newTest')}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* controls */}
+      <div
+        className="shrink-0 flex items-center justify-center gap-2.5 px-4 pt-2"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
+      >
+        {!result && typing.phase === 'ready' && (
+          <>
+            <button
+              onClick={typing.start}
+              className="flex-1 max-w-xs py-3.5 rounded-full text-[15px] font-semibold"
+              style={{ background: 'rgb(var(--accent))', color: 'rgb(var(--paper))' }}
+            >
+              {t(lang, 'startTyping')}
+            </button>
+            <button
+              onClick={newText}
+              className="py-3.5 px-5 rounded-full text-[15px] font-medium"
+              style={{ background: 'rgb(var(--ink) / 0.06)', color: 'rgb(var(--ink-soft))' }}
+              aria-label={t(lang, 'newWords')}
+            >
+              <IconShuffle />
+            </button>
+          </>
+        )}
+        {!result && typing.phase === 'running' && (
+          <>
+            <button
+              onClick={typing.restart}
+              className="flex-1 max-w-[10rem] py-3.5 rounded-full text-[15px] font-medium"
+              style={{ background: 'rgb(var(--ink) / 0.06)', color: 'rgb(var(--ink))' }}
+            >
+              {t(lang, 'restart')}
+            </button>
+            <button
+              onClick={typing.stop}
+              className="flex-1 max-w-[10rem] py-3.5 rounded-full text-[15px] font-semibold"
+              style={{ background: 'rgb(var(--accent))', color: 'rgb(var(--paper))' }}
+            >
+              {t(lang, 'stopRun')}
+            </button>
+          </>
+        )}
+        {!result && typing.phase === 'ready' && (
+          <span className="sr-only">{t(lang, 'tapToStart')}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Compact verdict sentence, mirroring the desktop Results logic. */
+function verdictText(
+  v: RunVerdict,
+  lang: string,
+  modeText: string,
+  unit: 'wpm' | 'cpm' | 'wps',
+  wpm: number,
+): string {
+  const amount = (n: number) => `${toSpeedUnit(Math.abs(n), unit)} ${unit}`;
+  if (v.first) return tf(lang, 'verdictFirst', { mode: modeText });
+  if (v.isPersonalBest)
+    return tf(lang, 'verdictBest', {
+      delta: amount(wpm - v.previousBest),
+      best: amount(v.previousBest),
+    });
+  const rank = tf(lang, 'verdictRank', { rank: ordinal(lang, v.rank), mode: modeText });
+  const trend =
+    v.delta > 0
+      ? tf(lang, 'verdictAbove', { delta: amount(v.delta) })
+      : v.delta < 0
+        ? tf(lang, 'verdictBelow', { delta: amount(v.delta) })
+        : t(lang, 'verdictLevel');
+  return `${rank} · ${trend}`;
+}
+
+/* --- icons (match the header's hand-drawn line style) --- */
+function IconMoon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" fill="currentColor" opacity="0.9" />
+    </svg>
+  );
+}
+function IconSun() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="12" r="4" />
+      <path
+        d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+function IconSound() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M4 9v6h4l5 4V5L8 9H4Z" strokeLinejoin="round" />
+      <path d="M17 8.5a5 5 0 0 1 0 7" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconSoundOff() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M4 9v6h4l5 4V5L8 9H4Z" strokeLinejoin="round" />
+      <path d="M16 9.5 21 15M21 9.5 16 15" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconShuffle() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M3 7h4l10 10h4M17 7h4M3 17h4l3-3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M18 4l3 3-3 3M18 14l3 3-3 3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

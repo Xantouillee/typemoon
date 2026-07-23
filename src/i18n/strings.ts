@@ -77,6 +77,12 @@ const en: Dict = {
   'midi_not-midi': 'That is not a MIDI file.',
   'midi_no-notes': 'No notes found in that file.',
   midi_unreadable: 'That file could not be read.',
+  startTyping: 'Start typing',
+  stopRun: 'Stop',
+  tapToStart: 'Tap the words, then type',
+  tapToResume: 'Tap to resume',
+  newWords: 'New words',
+  mobileTitle: 'Type',
 };
 
 const fr: Dict = {
@@ -153,6 +159,12 @@ const fr: Dict = {
   'midi_not-midi': 'Ce n’est pas un fichier MIDI.',
   'midi_no-notes': 'Aucune note trouvée dans ce fichier.',
   midi_unreadable: 'Ce fichier n’a pas pu être lu.',
+  startTyping: 'Commencer',
+  stopRun: 'Arrêter',
+  tapToStart: 'Touchez le texte, puis tapez',
+  tapToResume: 'Touchez pour reprendre',
+  newWords: 'Nouveaux mots',
+  mobileTitle: 'Taper',
 };
 
 const es: Dict = {
@@ -229,6 +241,12 @@ const es: Dict = {
   'midi_not-midi': 'Eso no es un archivo MIDI.',
   'midi_no-notes': 'No se han encontrado notas en ese archivo.',
   midi_unreadable: 'No se ha podido leer ese archivo.',
+  startTyping: 'Empezar',
+  stopRun: 'Parar',
+  tapToStart: 'Toca el texto y escribe',
+  tapToResume: 'Toca para continuar',
+  newWords: 'Nuevas palabras',
+  mobileTitle: 'Escribir',
 };
 
 const de: Dict = {
@@ -305,6 +323,12 @@ const de: Dict = {
   'midi_not-midi': 'Das ist keine MIDI-Datei.',
   'midi_no-notes': 'In dieser Datei wurden keine Noten gefunden.',
   midi_unreadable: 'Diese Datei konnte nicht gelesen werden.',
+  startTyping: 'Starten',
+  stopRun: 'Stopp',
+  tapToStart: 'Text antippen, dann tippen',
+  tapToResume: 'Zum Fortfahren tippen',
+  newWords: 'Neue Wörter',
+  mobileTitle: 'Tippen',
 };
 
 /** Exported so a test can prove no language has silently fallen behind English. */

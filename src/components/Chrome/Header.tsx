@@ -44,6 +44,16 @@ function IconEyeOff() {
   );
 }
 
+/** Touch / mobile typing mode. */
+function IconPhone() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="7" y="2.5" width="10" height="19" rx="2.4" />
+      <path d="M11 18.5h2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function IconGear() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -139,6 +149,16 @@ export function Header() {
             {s.bgVisible ? <IconEye /> : <IconEyeOff />}
           </button>
         )}
+
+        <Link
+          to="/play"
+          className="grid place-items-center w-9 h-9 rounded-full transition-colors"
+          style={{ color: 'rgb(var(--ink-soft))' }}
+          aria-label={t(lang, 'mobileTitle')}
+          title={t(lang, 'mobileTitle')}
+        >
+          <IconPhone />
+        </Link>
 
         <Link
           to="/settings"
