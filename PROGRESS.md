@@ -373,7 +373,17 @@ opens a slick card and a "beat it" button drops them into the exact same run.
 
 Gates: `tsc -b` clean · **117/117** tests · `vite build` ~209 kB gzip.
 
-## v4.0 — accounts, global leaderboard & lifetime stats — BUILT (needs Supabase setup to switch on)
+## v4.0 — accounts, global leaderboard & lifetime stats — SHIPPED (2026-07-23)
+**Switched on and merged to `main`.** A live Supabase project is wired
+(`mbjhrmhgyiykliiuvfnh`), GitHub **and** Google OAuth both work, and sign-in →
+run → leaderboard row → synced History was verified locally. One real bug fixed
+during switch-on: newer Supabase projects no longer grant the `anon`/
+`authenticated` roles access to public tables, so every read was a bare
+"permission denied" before RLS ran — `schema.sql` now `GRANT`s explicitly
+(SELECT both roles, INSERT scores / UPDATE profiles for authenticated).
+Local dev uses `.env.local` (gitignored). **Remaining to go live:** add repo
+secrets `SUPABASE_URL` / `SUPABASE_ANON_KEY` and re-run the Pages deploy.
+
 The first backend track. An **optional** Supabase layer adds Google/GitHub accounts,
 cross-device stats, and a global leaderboard — while the site stays a static GitHub Pages
 build and, with no keys configured, byte-for-byte the old no-account app. Everything gates
