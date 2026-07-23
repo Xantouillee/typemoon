@@ -17,7 +17,7 @@ import {
 } from '../lib/content';
 import type { TestResult } from '../engine/types';
 import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
-import { submitScore } from '../lib/leaderboard';
+import { submitScore, fetchPercentile, type Percentile } from '../lib/leaderboard';
 import { encodeScore, payloadFromResult } from '../lib/share';
 import { t } from '../i18n/strings';
 import { Backdrop, useBackdropClass } from '../components/Backdrop/Backdrop';
@@ -36,6 +36,7 @@ export function TestPage() {
   const [source, setSource] = useState<Passage | null>(null);
   const [result, setResult] = useState<TestResult | null>(null);
   const [verdict, setVerdict] = useState<RunVerdict | null>(null);
+  const [percentile, setPercentile] = useState<Percentile | null>(null);
   const [nonce, setNonce] = useState(0);
 
   // Build the typing target whenever the mode/options change or "new test" fires.
@@ -77,6 +78,7 @@ export function TestPage() {
     (r: TestResult) => {
       setResult(r);
       setVerdict(null);
+      setPercentile(null);
       // A failed run is not an attempt at the mode — it is a run that Expert or
       // Master stopped. Saving it would poison the average it would then be
       // ranked against, so it is neither recorded nor judged.
@@ -87,8 +89,13 @@ export function TestPage() {
         setVerdict(await judgeRun(r.wpm, mode, lang));
         await saveRun(r, mode, lang);
       })();
-      // and, if signed in, send it up for the global board (no-op otherwise)
-      void submitScore(r, mode, lang);
+      // The global board: read where the run stands *before* our own insert lands
+      // (so it is not measured against itself), then send it up. Both no-op when
+      // there is no backend or nobody is signed in.
+      void (async () => {
+        setPercentile(await fetchPercentile(r.wpm, mode, lang));
+        await submitScore(r, mode, lang);
+      })();
     },
     [s, lang],
   );
@@ -176,6 +183,7 @@ export function TestPage() {
                 speedUnit={s.speedUnit}
                 layout={layout}
                 verdict={verdict}
+                percentile={percentile}
                 modeText={modeLabel(s)}
                 shareParams={
                   result.failed || result.charsTyped === 0

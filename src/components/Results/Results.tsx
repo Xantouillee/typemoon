@@ -8,6 +8,7 @@ import type { Layout } from '../Keyboard/layouts';
 import { ordinal, t, tf } from '../../i18n/strings';
 import { toSpeedUnit, type SpeedUnit } from '../../store/settings';
 import type { RunVerdict } from '../../lib/db';
+import type { Percentile } from '../../lib/leaderboard';
 
 interface Props {
   result: TestResult;
@@ -16,6 +17,8 @@ interface Props {
   layout: Layout;
   /** how this run stands against your own history; null while it loads */
   verdict?: RunVerdict | null;
+  /** how this run stands against the whole field; null when unavailable/too thin */
+  percentile?: Percentile | null;
   /** the mode this run was typed in, for the verdict sentence */
   modeText?: string;
   /** the run was cut short by Expert/Master, rather than reaching its end */
@@ -157,6 +160,7 @@ export function Results({
   speedUnit,
   layout,
   verdict,
+  percentile,
   modeText,
   failed,
   difficulty,
@@ -193,6 +197,21 @@ export function Results({
               unit={speedUnit ?? 'wpm'}
               wpm={result.wpm}
             />
+          )}
+          {percentile && (
+            <motion.p
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55 }}
+              className="font-sans text-[13.5px] mt-1 inline-flex items-center gap-1.5"
+              style={{ color: 'rgb(var(--accent-2))', fontWeight: 500 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 17l6-6 4 4 8-8" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M17 3h4v4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {tf(lang, 'percentile', { pct: percentile.pct, mode: modeText ?? '' })}
+            </motion.p>
           )}
         </div>
         <div className="grid grid-cols-3 gap-x-10 gap-y-5">

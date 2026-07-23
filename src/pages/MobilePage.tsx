@@ -25,7 +25,7 @@ import {
 } from '../lib/content';
 import type { TestResult } from '../engine/types';
 import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
-import { submitScore } from '../lib/leaderboard';
+import { submitScore, fetchPercentile, type Percentile } from '../lib/leaderboard';
 import { ordinal, t, tf } from '../i18n/strings';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { avatarUrl, displayName, useAuth } from '../store/auth';
@@ -45,6 +45,7 @@ export function MobilePage() {
   const [nonce, setNonce] = useState(0);
   const [result, setResult] = useState<TestResult | null>(null);
   const [verdict, setVerdict] = useState<RunVerdict | null>(null);
+  const [percentile, setPercentile] = useState<Percentile | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const timeLimit = s.mode === 'time' ? s.timeValue : undefined;
@@ -55,6 +56,7 @@ export function MobilePage() {
     let alive = true;
     setResult(null);
     setVerdict(null);
+    setPercentile(null);
     (async () => {
       if (s.mode === 'quote' || s.mode === 'daily') {
         const passages = await loadPassages();
@@ -83,6 +85,7 @@ export function MobilePage() {
   const onFinish = useCallback(
     (r: TestResult) => {
       setResult(r);
+      setPercentile(null);
       if (r.charsTyped === 0) return;
       const mk = modeLabel(s);
       void (async () => {
@@ -90,7 +93,11 @@ export function MobilePage() {
         setVerdict(await judgeRun(r.wpm, mk, lang));
         await saveRun(r, mk, lang);
       })();
-      void submitScore(r, mk, lang);
+      // read the field position before our own insert lands, then submit
+      void (async () => {
+        setPercentile(await fetchPercentile(r.wpm, mk, lang));
+        await submitScore(r, mk, lang);
+      })();
     },
     [s, lang],
   );
@@ -108,6 +115,7 @@ export function MobilePage() {
   const again = useCallback(() => {
     setResult(null);
     setVerdict(null);
+    setPercentile(null);
     typing.restart();
   }, [typing]);
 
@@ -368,6 +376,11 @@ export function MobilePage() {
                   {verdict && (
                     <p className="mt-4 text-[13px] px-2" style={{ color: 'rgb(var(--ink-soft))' }}>
                       {verdictText(verdict, lang, modeLabel(s), s.speedUnit, result.wpm)}
+                    </p>
+                  )}
+                  {percentile && (
+                    <p className="mt-1.5 text-[13px] px-2 font-medium" style={{ color: 'rgb(var(--accent-2))' }}>
+                      ↗ {tf(lang, 'percentile', { pct: percentile.pct, mode: modeLabel(s) })}
                     </p>
                   )}
 

@@ -153,3 +153,33 @@ as $$
 $$;
 
 grant execute on function public.get_leaderboard(timestamptz, text, text, int) to anon, authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- run_percentile: where a single run stands in the field. Returns the share of
+-- recorded runs (same mode + language, optional time window) that were *slower*,
+-- plus the sample it was measured against so the UI can hide the figure until it
+-- is meaningful. "68 wpm" says nothing; "faster than 82% of runs" says a lot, and
+-- it rewards everyone, not only the handful fast enough to reach the top board.
+-- Counts runs, not distinct users — "% of runs" is what the sentence promises.
+-- ─────────────────────────────────────────────────────────────────────────────
+create or replace function public.run_percentile(
+  p_wpm      real,
+  p_mode     text,
+  p_language text,
+  p_since    timestamptz
+)
+returns table (pct real, sample integer)
+language sql stable
+as $$
+  select
+    case when count(*) = 0 then null
+         else round(100.0 * count(*) filter (where s.wpm < p_wpm) / count(*))::real
+    end as pct,
+    count(*)::int as sample
+  from public.scores s
+  where (p_mode is null or s.mode = p_mode)
+    and (p_language is null or s.language = p_language)
+    and (p_since is null or s.created_at >= p_since);
+$$;
+
+grant execute on function public.run_percentile(real, text, text, timestamptz) to anon, authenticated;

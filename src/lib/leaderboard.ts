@@ -88,6 +88,45 @@ export async function fetchLeaderboard(
   return data as LeaderRow[];
 }
 
+/** Where a run stands in the field: the % of runs it beat, and how many it was measured against. */
+export interface Percentile {
+  pct: number;
+  sample: number;
+}
+
+/**
+ * How many comparable runs must exist before a percentile is worth showing.
+ * Low enough that a fresh board surfaces it within a short session, high enough
+ * that "faster than 100%" of a single run never appears. As the field fills the
+ * figure quietly shifts from "better than your own recent runs" to a true global
+ * standing — same sentence, steadily more meaning.
+ */
+export const MIN_PERCENTILE_SAMPLE = 5;
+
+/**
+ * How this run compares to the whole field — the share of recorded runs at the
+ * same mode + language that were slower. Reads the global `scores` table, so it
+ * works for any visitor once a backend exists, signed in or not. Returns null
+ * when there is no backend or the sample is too thin to mean anything; call it
+ * *before* submitting the run so it is not measured against itself.
+ */
+export async function fetchPercentile(
+  wpm: number,
+  mode: string,
+  language: string,
+): Promise<Percentile | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('run_percentile', {
+    p_wpm: Math.round(wpm),
+    p_mode: mode,
+    p_language: language,
+    p_since: null, // all-time — the largest, steadiest sample while the field is young
+  });
+  const row = (data as Percentile[] | null)?.[0];
+  if (error || !row || row.pct == null || row.sample < MIN_PERCENTILE_SAMPLE) return null;
+  return { pct: row.pct, sample: row.sample };
+}
+
 /**
  * A signed-in player's own runs from the cloud, shaped like the local
  * `RunRecord`s so the very same `aggregate()` can draw their portrait — which is
