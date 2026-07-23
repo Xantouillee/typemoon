@@ -125,7 +125,7 @@ export function MobilePage() {
   const shareRun = useCallback(async () => {
     if (!result) return;
     const val = s.mode === 'time' ? s.timeValue : s.mode === 'words' ? s.wordsValue : undefined;
-    const payload = payloadFromResult(result, s.mode, val, lang);
+    const payload = payloadFromResult(result, s.mode, val, lang, percentile?.pct);
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         await navigator.share({
@@ -139,7 +139,7 @@ export function MobilePage() {
       return;
     }
     navigate(`/score?${encodeScore(payload)}`);
-  }, [result, s.mode, s.timeValue, s.wordsValue, lang, navigate]);
+  }, [result, s.mode, s.timeValue, s.wordsValue, lang, percentile, navigate]);
 
   const progress = useMemo(() => {
     if (s.mode !== 'words') return null;

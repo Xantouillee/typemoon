@@ -33,7 +33,19 @@ function ac(): AudioContext | null {
 
   master = ctx.createGain();
   master.gain.value = volume;
-  master.connect(ctx.destination);
+  // A brick-wall limiter on the very last stage. Every hit sums into `master`,
+  // and a fast typist (plus overlapping reverb tails) can pile enough
+  // simultaneous notes to push the sum past 1.0 — which the destination
+  // hard-clips into a crackle that reads as "the sound broke". The limiter
+  // catches those peaks instead, so spamming stays clean and only gets denser.
+  const limiter = ctx.createDynamicsCompressor();
+  limiter.threshold.value = -8;
+  limiter.knee.value = 6;
+  limiter.ratio.value = 12;
+  limiter.attack.value = 0.003;
+  limiter.release.value = 0.12;
+  master.connect(limiter);
+  limiter.connect(ctx.destination);
 
   dry = ctx.createGain();
   dry.connect(master);

@@ -20,6 +20,8 @@ export interface ScorePayload {
   lang: string;
   /** downsampled per-second wpm, for the card's seismograph */
   series?: number[];
+  /** "faster than X% of runs" standing, when the field was deep enough to have one */
+  pct?: number;
 }
 
 import type { TestResult } from '../engine/types';
@@ -30,6 +32,7 @@ export function payloadFromResult(
   mode: string,
   val: number | undefined,
   lang: string,
+  pct?: number,
 ): ScorePayload {
   return {
     wpm: result.wpm,
@@ -40,6 +43,7 @@ export function payloadFromResult(
     val,
     lang,
     series: result.series.map((s) => s.wpm),
+    pct,
   };
 }
 
@@ -59,6 +63,7 @@ export function encodeScore(p: ScorePayload): string {
   q.set('m', p.mode);
   if (p.val != null) q.set('v', String(p.val));
   q.set('l', p.lang);
+  if (p.pct != null) q.set('p', String(Math.round(p.pct)));
   if (p.series?.length) q.set('s', downsample(p.series, 24).map((v) => Math.round(v)).join('.'));
   return q.toString();
 }
@@ -83,6 +88,7 @@ export function decodeScore(params: URLSearchParams): ScorePayload | null {
     val: num(params.get('v')),
     lang: params.get('l') || 'en',
     series: series?.length ? series : undefined,
+    pct: num(params.get('p')),
   };
 }
 
@@ -164,6 +170,18 @@ export function buildScoreCardSvg(p: ScorePayload): string {
     })
     .join('');
 
+  // --- "faster than X% of runs", when the run carried a standing. Drawn arrow
+  // rather than a ↗ glyph so it survives rasterisation with no web font.
+  const pctBadge =
+    p.pct != null
+      ? `
+  <g transform="translate(${pad}, 432)" stroke="${C.gold}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 18 L9 11 L14 16 L22 6"/>
+    <path d="M16 6 h6 v6"/>
+  </g>
+  <text x="${pad + 34}" y="450" font-family="${SANS}" font-weight="700" font-size="23" letter-spacing="1.5" fill="${C.gold}">FASTER THAN ${Math.round(p.pct)}% OF RUNS</text>`
+      : '';
+
   // --- seismograph sparkline in its own band below all the text
   const spark = sparkline(p.series ?? [], pad, 476, w - pad, 92);
 
@@ -183,6 +201,7 @@ export function buildScoreCardSvg(p: ScorePayload): string {
   <!-- hero WPM -->
   <text x="${pad - 6}" y="360" font-family="${DISPLAY}" font-weight="900" font-size="248" fill="${C.accent}">${wpm}</text>
   <text x="${pad + 4}" y="410" font-family="${SANS}" font-weight="700" font-size="26" letter-spacing="8" fill="${C.ink}">WORDS PER MINUTE</text>
+  ${pctBadge}
 
   ${statRows}
   ${spark}

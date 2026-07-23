@@ -194,6 +194,7 @@ export function TestPage() {
                           s.mode,
                           s.mode === 'time' ? s.timeValue : s.mode === 'words' ? s.wordsValue : undefined,
                           lang,
+                          percentile?.pct,
                         ),
                       )
                 }
