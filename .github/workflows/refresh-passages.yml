@@ -1,0 +1,48 @@
+name: Refresh daily passages
+
+# Keeps the daily page from ever running dry: on a schedule (and on demand) it
+# re-runs the pool builder against Project Gutenberg and commits pool.json when
+# it changed. A commit to main then triggers the normal Pages deploy, so fresh
+# passages go live on their own. Editing the curated book list in
+# scripts/build-daily-pool.ts is all it takes to grow the pool.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # every Monday, 06:00 UTC
+  workflow_dispatch:
+
+# The job commits the regenerated pool back to the repo.
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-passages
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Rebuild the passage pool from Gutenberg
+        run: npx tsx scripts/build-daily-pool.ts
+
+      - name: Commit pool.json if it changed
+        run: |
+          if git diff --quiet -- public/passages/pool.json; then
+            echo "No passage changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/passages/pool.json
+          git commit -m "Refresh daily passage pool from Gutenberg"
+          git push

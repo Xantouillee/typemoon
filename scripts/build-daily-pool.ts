@@ -1,31 +1,32 @@
 /**
  * build-daily-pool.ts
  * -------------------------------------------------------------------------
- * Fetches a curated set of famous, public-domain books from Project Gutenberg
- * (via the Gutendex API: https://gutendex.com/books) and extracts a clean,
- * ~60-110 word passage from each one. The results are merged into
- * `public/passages/pool.json`, de-duplicated by passage id.
+ * Fetches a curated set of famous, beloved public-domain books from Project
+ * Gutenberg (via the Gutendex API) and extracts several clean ~60–110 word
+ * passages from each. Results are merged into `public/passages/pool.json`,
+ * de-duplicated by passage id.
  *
- * Run with:
- *   npx tsx scripts/build-daily-pool.ts
+ * Design notes:
+ *   - The point of the daily page is recognition — "oh, I love that book". So
+ *     the list below is deliberately crowd-pleasing (openings people can quote),
+ *     not a random public-domain grab-bag.
+ *   - Several passages per book (unique ids) means the pool GROWS, rather than
+ *     one-per-book that a re-run just overwrites.
+ *   - This runs unattended in CI, so it never trusts a hand-typed Gutenberg id:
+ *     Gutendex's own `languages` (and a loose title check) must agree before a
+ *     book is used, or it is skipped. A wrong id can therefore never mislabel a
+ *     passage or slip a foreign-language book into the wrong list.
  *
- * Requirements:
- *   - Node 18+ (for the built-in global `fetch`)
- *   - tsx (already a devDependency / run via npx) — no other npm packages
- *     are required; only built-in Node APIs (fs, path) are used.
+ * Run with:  npx tsx scripts/build-daily-pool.ts
+ * Requires:  Node 18+ (built-in fetch), tsx. No other packages.
  * -------------------------------------------------------------------------
  */
 
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-// ---------------------------------------------------------------------------
-// 1. Curated list of famous, verifiably public-domain books.
-//    Gutenberg book IDs -> metadata we want stamped onto each passage.
-//    (IDs were looked up on gutenberg.org / gutendex.com and are stable.)
-// ---------------------------------------------------------------------------
 interface BookMeta {
-  id: string; // slug used as the passage id, e.g. "austen-pride-and-prejudice"
+  id: string; // slug base for passage ids, e.g. "austen-pride-and-prejudice"
   title: string;
   author: string;
   language: "en" | "fr" | "es" | "de";
@@ -33,27 +34,56 @@ interface BookMeta {
   gutenbergId: number;
 }
 
+// ---------------------------------------------------------------------------
+// Curated, beloved, verifiably public-domain books. Gutenberg ids are checked
+// against Gutendex at runtime (language + title), so a stale id fails safe.
+// ---------------------------------------------------------------------------
 const CURATED_BOOKS: BookMeta[] = [
+  // — English —
   { id: "austen-pride-and-prejudice", title: "Pride and Prejudice", author: "Jane Austen", language: "en", year: 1813, gutenbergId: 1342 },
+  { id: "austen-emma", title: "Emma", author: "Jane Austen", language: "en", year: 1815, gutenbergId: 158 },
   { id: "dickens-tale-of-two-cities", title: "A Tale of Two Cities", author: "Charles Dickens", language: "en", year: 1859, gutenbergId: 98 },
   { id: "dickens-great-expectations", title: "Great Expectations", author: "Charles Dickens", language: "en", year: 1861, gutenbergId: 1400 },
+  { id: "dickens-christmas-carol", title: "A Christmas Carol", author: "Charles Dickens", language: "en", year: 1843, gutenbergId: 46 },
   { id: "melville-moby-dick", title: "Moby-Dick", author: "Herman Melville", language: "en", year: 1851, gutenbergId: 2701 },
   { id: "shelley-frankenstein", title: "Frankenstein", author: "Mary Shelley", language: "en", year: 1818, gutenbergId: 84 },
   { id: "carroll-alice-in-wonderland", title: "Alice's Adventures in Wonderland", author: "Lewis Carroll", language: "en", year: 1865, gutenbergId: 11 },
   { id: "doyle-sherlock-holmes", title: "The Adventures of Sherlock Holmes", author: "Arthur Conan Doyle", language: "en", year: 1892, gutenbergId: 1661 },
   { id: "stoker-dracula", title: "Dracula", author: "Bram Stoker", language: "en", year: 1897, gutenbergId: 345 },
+  { id: "bronte-jane-eyre", title: "Jane Eyre", author: "Charlotte Brontë", language: "en", year: 1847, gutenbergId: 1260 },
+  { id: "bronte-wuthering-heights", title: "Wuthering Heights", author: "Emily Brontë", language: "en", year: 1847, gutenbergId: 768 },
+  { id: "wilde-dorian-gray", title: "The Picture of Dorian Gray", author: "Oscar Wilde", language: "en", year: 1890, gutenbergId: 174 },
+  { id: "twain-huckleberry-finn", title: "Adventures of Huckleberry Finn", author: "Mark Twain", language: "en", year: 1884, gutenbergId: 76 },
+  { id: "twain-tom-sawyer", title: "The Adventures of Tom Sawyer", author: "Mark Twain", language: "en", year: 1876, gutenbergId: 74 },
+  { id: "london-call-of-the-wild", title: "The Call of the Wild", author: "Jack London", language: "en", year: 1903, gutenbergId: 215 },
+  { id: "wells-war-of-the-worlds", title: "The War of the Worlds", author: "H. G. Wells", language: "en", year: 1898, gutenbergId: 36 },
+  { id: "wells-time-machine", title: "The Time Machine", author: "H. G. Wells", language: "en", year: 1895, gutenbergId: 35 },
+  { id: "stevenson-treasure-island", title: "Treasure Island", author: "Robert Louis Stevenson", language: "en", year: 1883, gutenbergId: 120 },
+  { id: "barrie-peter-pan", title: "Peter Pan", author: "J. M. Barrie", language: "en", year: 1911, gutenbergId: 16 },
+  { id: "baum-wizard-of-oz", title: "The Wonderful Wizard of Oz", author: "L. Frank Baum", language: "en", year: 1900, gutenbergId: 55 },
+  { id: "montgomery-anne-of-green-gables", title: "Anne of Green Gables", author: "L. M. Montgomery", language: "en", year: 1908, gutenbergId: 45 },
+  { id: "fitzgerald-great-gatsby", title: "The Great Gatsby", author: "F. Scott Fitzgerald", language: "en", year: 1925, gutenbergId: 64317 },
+  { id: "homer-odyssey", title: "The Odyssey", author: "Homer", language: "en", year: -700, gutenbergId: 1727 },
+
+  // — Français —
   { id: "hugo-les-miserables", title: "Les Misérables", author: "Victor Hugo", language: "fr", year: 1862, gutenbergId: 17489 },
-  { id: "flaubert-madame-bovary", title: "Madame Bovary", author: "Gustave Flaubert", language: "fr", year: 1857, gutenbergId: 2413 },
-  { id: "voltaire-candide", title: "Candide", author: "Voltaire", language: "fr", year: 1759, gutenbergId: 19942 },
-  { id: "cervantes-don-quijote", title: "Don Quijote de la Mancha", author: "Miguel de Cervantes", language: "es", year: 1605, gutenbergId: 2000 },
-  { id: "clarin-la-regenta", title: "La Regenta", author: "Leopoldo Alas «Clarín»", language: "es", year: 1884, gutenbergId: 17231 },
-  { id: "kafka-die-verwandlung", title: "Die Verwandlung", author: "Franz Kafka", language: "de", year: 1915, gutenbergId: 5200 },
+  { id: "flaubert-madame-bovary", title: "Madame Bovary", author: "Gustave Flaubert", language: "fr", year: 1857, gutenbergId: 14155 },
+  { id: "voltaire-candide", title: "Candide", author: "Voltaire", language: "fr", year: 1759, gutenbergId: 4650 },
+  { id: "dumas-trois-mousquetaires", title: "Les Trois Mousquetaires", author: "Alexandre Dumas", language: "fr", year: 1844, gutenbergId: 13951 },
+  { id: "leroux-fantome-opera", title: "Le Fantôme de l'Opéra", author: "Gaston Leroux", language: "fr", year: 1910, gutenbergId: 62215 },
+  { id: "verne-tour-du-monde", title: "Le Tour du monde en quatre-vingts jours", author: "Jules Verne", language: "fr", year: 1873, gutenbergId: 800 },
+
+  // — Español —
+  { id: "cervantes-don-quijote", title: "Don Quijote", author: "Miguel de Cervantes", language: "es", year: 1605, gutenbergId: 2000 },
+  { id: "clarin-la-regenta", title: "La Regenta", author: "Leopoldo Alas «Clarín»", language: "es", year: 1884, gutenbergId: 17073 },
+
+  // — Deutsch —
+  { id: "kafka-die-verwandlung", title: "Die Verwandlung", author: "Franz Kafka", language: "de", year: 1915, gutenbergId: 22367 },
   { id: "goethe-werther", title: "Die Leiden des jungen Werthers", author: "Johann Wolfgang von Goethe", language: "de", year: 1774, gutenbergId: 2407 },
+  { id: "goethe-faust", title: "Faust", author: "Johann Wolfgang von Goethe", language: "de", year: 1808, gutenbergId: 2229 },
+  { id: "grimm-maerchen", title: "Märchen der Gebrüder Grimm", author: "Brüder Grimm", language: "de", year: 1812, gutenbergId: 20050 },
 ];
 
-// ---------------------------------------------------------------------------
-// Types & paths
-// ---------------------------------------------------------------------------
 interface Passage {
   id: string;
   title: string;
@@ -67,42 +97,60 @@ interface PassagePool {
   passages: Passage[];
 }
 
-const POOL_PATH = path.resolve(__dirname, "..", "public", "passages", "pool.json");
+// Run from the project root (npm script / CI both do), so cwd resolution is
+// portable across CommonJS and ESM without needing __dirname / import.meta.
+const POOL_PATH = path.resolve(process.cwd(), "public", "passages", "pool.json");
 const MIN_WORDS = 60;
 const MAX_WORDS = 110;
+const PASSAGES_PER_BOOK = 4;
 
-// ---------------------------------------------------------------------------
-// 2. Gutendex lookup: resolve a Gutenberg book id to its plain-text UTF-8
-//    download URL. Gutendex exposes `formats` with a "text/plain; charset=utf-8"
-//    key (sometimes just "text/plain").
-// ---------------------------------------------------------------------------
-async function getPlainTextUrl(gutenbergId: number): Promise<string | null> {
-  const apiUrl = `https://gutendex.com/books/${gutenbergId}`;
+interface BookInfo {
+  url: string;
+  languages: string[];
+  title: string;
+}
+
+/** Resolve a Gutenberg id to its plain-text URL plus the metadata we validate against. */
+async function getBookInfo(gutenbergId: number): Promise<BookInfo | null> {
   try {
-    const res = await fetch(apiUrl);
+    const res = await fetch(`https://gutendex.com/books/${gutenbergId}`);
     if (!res.ok) {
       console.warn(`  [warn] Gutendex lookup failed for id ${gutenbergId}: HTTP ${res.status}`);
       return null;
     }
-    const data = (await res.json()) as { formats?: Record<string, string> };
+    const data = (await res.json()) as {
+      formats?: Record<string, string>;
+      languages?: string[];
+      title?: string;
+    };
     const formats = data.formats ?? {};
-    // Prefer an explicit UTF-8 plain text format, then fall back to any
-    // "text/plain" variant.
-    const utf8Key = Object.keys(formats).find(
-      (k) => k.startsWith("text/plain") && k.includes("utf-8")
+    const utf8Key = Object.keys(formats).find((k) => k.startsWith("text/plain") && k.includes("utf-8"));
+    const anyTextKey = Object.keys(formats).find(
+      (k) => k.startsWith("text/plain") && !formats[k].endsWith(".zip"),
     );
-    const anyTextKey = Object.keys(formats).find((k) => k.startsWith("text/plain"));
     const key = utf8Key ?? anyTextKey;
-    return key ? formats[key] : null;
+    if (!key) return null;
+    return { url: formats[key], languages: data.languages ?? [], title: data.title ?? "" };
   } catch (err) {
     console.warn(`  [warn] Error querying Gutendex for id ${gutenbergId}:`, (err as Error).message);
     return null;
   }
 }
 
-// ---------------------------------------------------------------------------
-// 3. Download the raw plain-text book body.
-// ---------------------------------------------------------------------------
+/** A loose title match: do the two share a distinctive word (>3 letters)? Guards against a wrong id. */
+function titlesAgree(expected: string, actual: string): boolean {
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9 ]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 3);
+  const a = new Set(norm(expected));
+  return norm(actual).some((w) => a.has(w));
+}
+
 async function downloadText(url: string): Promise<string | null> {
   try {
     const res = await fetch(url);
@@ -117,163 +165,159 @@ async function downloadText(url: string): Promise<string | null> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// 4. Strip Project Gutenberg's boilerplate header/footer.
-//    Header ends at the line beginning "*** START OF" (inclusive).
-//    Footer begins at the line beginning "*** END OF" (inclusive), everything
-//    after is discarded.
-// ---------------------------------------------------------------------------
+/** Drop Project Gutenberg's header/footer boilerplate. */
 function stripGutenbergBoilerplate(raw: string): string {
   const lines = raw.split(/\r?\n/);
-
-  let startIdx = 0;
   const startLineIdx = lines.findIndex((l) => l.trim().toUpperCase().startsWith("*** START OF"));
-  if (startLineIdx !== -1) {
-    startIdx = startLineIdx + 1; // drop everything up to & including this line
-  }
-
-  let endIdx = lines.length;
+  const startIdx = startLineIdx !== -1 ? startLineIdx + 1 : 0;
   const endLineIdx = lines.findIndex((l) => l.trim().toUpperCase().startsWith("*** END OF"));
-  if (endLineIdx !== -1) {
-    endIdx = endLineIdx; // drop this line and everything after
-  }
-
+  const endIdx = endLineIdx !== -1 ? endLineIdx : lines.length;
   return lines.slice(startIdx, endIdx).join("\n");
 }
 
-// ---------------------------------------------------------------------------
-// 5. Collapse all whitespace (newlines, tabs, repeated spaces) into single
-//    spaces, and trim.
-// ---------------------------------------------------------------------------
 function collapseWhitespace(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
-// ---------------------------------------------------------------------------
-// 6. Extract a clean, self-contained ~60-110 word paragraph from the cleaned
-//    book body. We look a fair way into the text (skip preliminary matter
-//    like tables of contents / dedications), scan candidate "sentences"
-//    (split naively on ". ") and greedily accumulate them into a chunk of
-//    the desired length, stopping at a sentence boundary.
-// ---------------------------------------------------------------------------
-function extractPassage(cleanedText: string): string | null {
-  // Skip roughly the first 3% of the body (front matter) but not more than
-  // 4000 characters, to land somewhere inside the actual narrative.
-  const skipChars = Math.min(4000, Math.floor(cleanedText.length * 0.03));
-  const body = cleanedText.slice(skipChars);
-
-  // Split into naive sentences on ". ", "! ", "? " while keeping the
-  // delimiter attached to the sentence that precedes it.
-  const sentences = body.split(/(?<=[.!?])\s+/);
-
-  let chunk: string[] = [];
-  let wordCount = 0;
-
-  for (const sentence of sentences) {
-    const words = sentence.trim().split(/\s+/).filter(Boolean);
-    if (words.length === 0) continue;
-
-    // Skip sentences that look like footnote markers, chapter headings, or
-    // stray numbers-only fragments.
-    if (/^(chapter|CHAPTER|\d+)\b/.test(sentence.trim())) {
-      if (chunk.length === 0) continue; // haven't started a chunk yet, skip heading
-    }
-
-    chunk.push(sentence.trim());
-    wordCount += words.length;
-
-    if (wordCount >= MIN_WORDS) {
-      // Stop as soon as we're within the target window; prefer stopping
-      // right after crossing MIN_WORDS rather than overshooting MAX_WORDS.
-      if (wordCount <= MAX_WORDS) {
-        return chunk.join(" ");
-      }
-      // We overshot; back off to just the sentences that keep us in range,
-      // or fail this attempt and let the caller try further into the text.
-      return null;
-    }
+/** A passage reads badly if it is mostly front-matter cruft, so screen those out. */
+function looksLikeProse(chunk: string): boolean {
+  if (/gutenberg|ebook|copyright|transcrib|illustration|contents|chapter\s+[ivxlc0-9]+\s*$/i.test(chunk)) {
+    return false;
   }
-
-  return null; // never reached the minimum word count in this window
+  const letters = (chunk.match(/[a-zA-Zà-üÀ-Ü]/g) ?? []).length;
+  return letters / chunk.length > 0.7; // mostly words, not numbers/punctuation
 }
 
-// ---------------------------------------------------------------------------
-// 7. Load the existing pool.json (if present) so we can merge & de-dupe.
-// ---------------------------------------------------------------------------
+/**
+ * Extract one clean ~60–110 word passage starting at/after a character offset,
+ * accumulating whole sentences and stopping on a sentence boundary in range.
+ */
+function passageAt(body: string, fromChar: number): string | null {
+  let slice = body.slice(fromChar);
+  // The anchor lands mid-sentence, so the first fragment is a sentence tail that
+  // would start the passage on a lowercase word. Drop it: begin at the next
+  // sentence boundary so the passage opens cleanly on a capital.
+  const boundary = slice.search(/[.!?]["'”’]?\s+/);
+  if (boundary !== -1) slice = slice.slice(boundary + 1).replace(/^["'”’\s]+/, "");
+  const sentences = slice.split(/(?<=[.!?])\s+/);
+  const chunk: string[] = [];
+  let words = 0;
+  for (const s of sentences) {
+    const w = s.trim().split(/\s+/).filter(Boolean);
+    if (!w.length) continue;
+    if (/^(chapter|CHAPTER|[IVXLC]+\.?|\d+)\b/.test(s.trim()) && chunk.length === 0) continue;
+    chunk.push(s.trim());
+    words += w.length;
+    if (words >= MIN_WORDS) {
+      if (words > MAX_WORDS) return null;
+      const text = chunk.join(" ");
+      return looksLikeProse(text) ? text : null;
+    }
+  }
+  return null;
+}
+
+/** Several passages from spread-out anchor points; the early anchors catch the famous openings. */
+function extractPassages(cleaned: string, want: number): string[] {
+  const anchors = [0.04, 0.16, 0.3, 0.45, 0.6, 0.74, 0.86];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const frac of anchors) {
+    if (out.length >= want) break;
+    // walk forward a little from the anchor until a clean passage appears
+    for (let step = 0; step < 5; step++) {
+      const from = Math.floor(cleaned.length * frac) + step * 900;
+      const p = passageAt(cleaned, from);
+      const keyStart = p?.slice(0, 40);
+      if (p && keyStart && !seen.has(keyStart)) {
+        seen.add(keyStart);
+        out.push(p);
+        break;
+      }
+    }
+  }
+  return out;
+}
+
 async function loadExistingPool(): Promise<PassagePool> {
   try {
-    const raw = await readFile(POOL_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as PassagePool;
-    if (Array.isArray(parsed.passages)) return parsed;
-    return { passages: [] };
+    const parsed = JSON.parse(await readFile(POOL_PATH, "utf-8")) as PassagePool;
+    return Array.isArray(parsed.passages) ? parsed : { passages: [] };
   } catch {
     return { passages: [] };
   }
 }
 
-// ---------------------------------------------------------------------------
-// 8. Main driver: fetch each curated book, extract a passage, merge into
-//    the pool, de-duplicate by id (new fetch wins), and write back to disk.
-// ---------------------------------------------------------------------------
 async function main() {
-  console.log(`Building daily passage pool from ${CURATED_BOOKS.length} curated Gutenberg books...\n`);
+  console.log(`Building daily passage pool from ${CURATED_BOOKS.length} curated books...\n`);
 
-  const existingPool = await loadExistingPool();
+  // Merge with what's on disk by default, so a transient fetch failure in CI
+  // never wipes committed passages. FRESH=1 rebuilds from scratch (used once
+  // when the id scheme changed, to clear now-stale ids).
+  const existing = process.env.FRESH === "1" ? { passages: [] } : await loadExistingPool();
   const byId = new Map<string, Passage>();
-  for (const p of existingPool.passages) byId.set(p.id, p);
+  for (const p of existing.passages) byId.set(p.id, p);
 
-  let fetched = 0;
+  let books = 0;
+  let added = 0;
   let skipped = 0;
 
   for (const book of CURATED_BOOKS) {
-    console.log(`Fetching "${book.title}" by ${book.author} (Gutenberg #${book.gutenbergId})...`);
+    console.log(`"${book.title}" — ${book.author} (Gutenberg #${book.gutenbergId})`);
 
-    const textUrl = await getPlainTextUrl(book.gutenbergId);
-    if (!textUrl) {
-      console.warn(`  [skip] No plain-text format found for "${book.title}".`);
+    const info = await getBookInfo(book.gutenbergId);
+    if (!info) {
+      console.warn(`  [skip] no plain-text format.`);
+      skipped++;
+      continue;
+    }
+    // The safety gate: Gutendex must agree on language and title.
+    if (!info.languages.includes(book.language)) {
+      console.warn(`  [skip] language mismatch: expected ${book.language}, Gutendex says ${info.languages.join("/") || "?"}.`);
+      skipped++;
+      continue;
+    }
+    if (info.title && !titlesAgree(book.title, info.title)) {
+      console.warn(`  [skip] title mismatch: expected "${book.title}", Gutendex says "${info.title}".`);
       skipped++;
       continue;
     }
 
-    const raw = await downloadText(textUrl);
+    const raw = await downloadText(info.url);
     if (!raw) {
-      console.warn(`  [skip] Could not download text for "${book.title}".`);
       skipped++;
       continue;
     }
 
-    const stripped = stripGutenbergBoilerplate(raw);
-    const cleaned = collapseWhitespace(stripped);
-
-    const passageText = extractPassage(cleaned);
-    if (!passageText) {
-      console.warn(`  [skip] Could not extract a ${MIN_WORDS}-${MAX_WORDS} word passage for "${book.title}".`);
+    const cleaned = collapseWhitespace(stripGutenbergBoilerplate(raw));
+    const passages = extractPassages(cleaned, PASSAGES_PER_BOOK);
+    if (!passages.length) {
+      console.warn(`  [skip] no clean passage found.`);
       skipped++;
       continue;
     }
 
-    byId.set(book.id, {
-      id: book.id,
-      title: book.title,
-      author: book.author,
-      language: book.language,
-      year: book.year,
-      text: passageText,
+    passages.forEach((text, i) => {
+      byId.set(`${book.id}-${i + 1}`, {
+        id: `${book.id}-${i + 1}`,
+        title: book.title,
+        author: book.author,
+        language: book.language,
+        year: book.year,
+        text,
+      });
     });
-
-    fetched++;
-    console.log(`  [ok] Extracted ${passageText.split(/\s+/).length} words.`);
+    books++;
+    added += passages.length;
+    console.log(`  [ok] ${passages.length} passage(s).`);
   }
 
-  const mergedPool: PassagePool = { passages: Array.from(byId.values()) };
-
-  await writeFile(POOL_PATH, JSON.stringify(mergedPool, null, 2) + "\n", "utf-8");
+  const pool: PassagePool = { passages: Array.from(byId.values()) };
+  await writeFile(POOL_PATH, JSON.stringify(pool, null, 2) + "\n", "utf-8");
 
   console.log("\n--- Summary ---");
-  console.log(`Curated books processed: ${CURATED_BOOKS.length}`);
-  console.log(`Passages fetched/updated: ${fetched}`);
-  console.log(`Skipped (errors or extraction failures): ${skipped}`);
-  console.log(`Total passages now in pool: ${mergedPool.passages.length}`);
+  console.log(`Books used: ${books}/${CURATED_BOOKS.length} · passages written: ${added} · skipped: ${skipped}`);
+  console.log(`Total passages in pool: ${pool.passages.length}`);
   console.log(`Written to: ${POOL_PATH}`);
 }
 
