@@ -334,7 +334,20 @@ the engine, word lists, themes and history stay shared.
       mistake corrected by backspace staying in sync (99.2%), a clean run (100%), and restart
       via "again" — no console errors.
 
-Gates: `tsc -b` clean · **107/107** tests (97 + 10 inputDiff) · `vite build` ~204 kB gzip.
+Follow-ups (same track, pending sign-off):
+- [x] **Tap-to-type** — the input is a transparent overlay over the words, so
+      tapping the text focuses a real field and the keyboard rises natively.
+- [x] **Settings sheet** — a gear opens a bottom-sheet: theme swatches, sound +
+      volume, the full keyboard-voice picker with tap-to-audition, punctuation/
+      numbers, text size. All on the shared store, so choices sync with desktop.
+- [x] **Mode parity** — the phone now drives the same `mode`/`timeValue`/
+      `wordsValue` store as desktop: time (15/30/60/120), words (10/25/50/100),
+      quote, daily, zen, in a two-row selector (category, then length) that
+      scrolls rather than crowds. Runs group with desktop history via `modeLabel`.
+- [x] Removed the desktop header's phone-mode icon (touch visitors are already
+      redirected; the icon did nothing useful on a computer).
+
+Gates: `tsc -b` clean · **107/107** tests · `vite build` ~205 kB gzip.
 
 ## UX AUDIT — 16 findings (2026-07-22) — THE WORK QUEUE
 Full walkthrough as a new user. **Next task: work through these.**

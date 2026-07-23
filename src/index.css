@@ -138,6 +138,16 @@ body::before {
   50% { opacity: 0.35; }
 }
 
+/* horizontal chip rows that may overflow on a narrow phone scroll rather than
+   wrap or crowd — with the scrollbar hidden so it reads as one clean row */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* small caps label helper */
 .eyebrow {
   font-family: 'Hanken Grotesk', sans-serif;

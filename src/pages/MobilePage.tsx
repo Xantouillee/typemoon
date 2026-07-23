@@ -1,84 +1,95 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useSettings, toSpeedUnit } from '../store/settings';
+import {
+  useSettings,
+  toSpeedUnit,
+  modeLabel,
+  TIME_VALUES,
+  WORD_VALUES,
+  type Mode,
+} from '../store/settings';
 import { useMobileTyping } from '../hooks/useMobileTyping';
 import { useViewportHeight } from '../hooks/useViewportHeight';
 import { MobileTypingArea } from '../components/Mobile/MobileTypingArea';
 import { MobileSettings } from '../components/Mobile/MobileSettings';
-import { generateWords } from '../engine/textGen';
-import { LANGUAGES, loadWords } from '../lib/content';
+import { generateWords, cleanPassage } from '../engine/textGen';
+import {
+  LANGUAGES,
+  loadWords,
+  loadPassages,
+  dailyPassage,
+  randomPassage,
+  type Passage,
+} from '../lib/content';
 import type { TestResult } from '../engine/types';
 import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
 import { ordinal, t, tf } from '../i18n/strings';
 
-type Mode = 'words25' | 'time30' | 'time60';
-
-const MODES: { id: Mode; timeLimit?: number; words: number; label: (lang: string) => string }[] = [
-  { id: 'words25', words: 25, label: (l) => `25 ${t(l, 'words')}` },
-  { id: 'time30', timeLimit: 30, words: 120, label: () => '30s' },
-  { id: 'time60', timeLimit: 60, words: 240, label: () => '60s' },
-];
-
-/** The mode string used for history/verdicts — kept identical to the desktop
- *  `modeLabel` format so a run typed on a phone ranks against the same cohort. */
-function modeKey(m: Mode): string {
-  if (m === 'words25') return 'words 25';
-  if (m === 'time30') return 'time 30';
-  return 'time 60';
-}
+// The same five modes the desktop offers, so the phone is at parity.
+const MODES: Mode[] = ['time', 'words', 'quote', 'daily', 'zen'];
 
 export function MobilePage() {
   const s = useSettings();
   const lang = s.language;
   const appHeight = useViewportHeight();
 
-  const [mode, setMode] = useState<Mode>('words25');
   const [target, setTarget] = useState('');
+  const [source, setSource] = useState<Passage | null>(null);
   const [nonce, setNonce] = useState(0);
   const [result, setResult] = useState<TestResult | null>(null);
   const [verdict, setVerdict] = useState<RunVerdict | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const modeCfg = useMemo(() => MODES.find((m) => m.id === mode)!, [mode]);
+  const timeLimit = s.mode === 'time' ? s.timeValue : undefined;
 
-  // Build the text whenever the mode, language, options or "new" nonce change.
+  // Build the typing target for the current mode: words/time draw from the word
+  // pool, quote/daily pull a public-domain passage, zen is a long free run.
   useEffect(() => {
     let alive = true;
     setResult(null);
     setVerdict(null);
     (async () => {
-      const words = await loadWords(lang);
-      if (!alive) return;
-      setTarget(
-        generateWords(words, {
-          count: modeCfg.words,
-          punctuation: s.punctuation,
-          numbers: s.numbers,
-        }),
-      );
+      if (s.mode === 'quote' || s.mode === 'daily') {
+        const passages = await loadPassages();
+        if (!alive) return;
+        const p = s.mode === 'daily' ? dailyPassage(passages, lang) : randomPassage(passages, lang);
+        setSource(p);
+        setTarget(cleanPassage(p.text));
+      } else {
+        const words = await loadWords(lang);
+        if (!alive) return;
+        setSource(null);
+        const count =
+          s.mode === 'time'
+            ? Math.max(120, s.timeValue * 3)
+            : s.mode === 'zen'
+              ? 60
+              : s.wordsValue;
+        setTarget(generateWords(words, { count, punctuation: s.punctuation, numbers: s.numbers }));
+      }
     })();
     return () => {
       alive = false;
     };
-  }, [mode, lang, s.punctuation, s.numbers, nonce, modeCfg.words]);
+  }, [s.mode, s.timeValue, s.wordsValue, s.punctuation, s.numbers, lang, nonce]);
 
   const onFinish = useCallback(
     (r: TestResult) => {
       setResult(r);
       if (r.charsTyped === 0) return;
-      const mk = modeKey(mode);
+      const mk = modeLabel(s);
       void (async () => {
         // rank before saving so the run does not compete with itself
         setVerdict(await judgeRun(r.wpm, mk, lang));
         await saveRun(r, mk, lang);
       })();
     },
-    [mode, lang],
+    [s, lang],
   );
 
   const typing = useMobileTyping(target, {
-    timeLimit: modeCfg.timeLimit,
+    timeLimit,
     sound: s.sound,
     soundTheme: s.soundTheme,
     errorSound: s.errorSound,
@@ -93,11 +104,11 @@ export function MobilePage() {
     typing.restart();
   }, [typing]);
 
-  const progressWords = useMemo(() => {
-    if (mode !== 'words25') return null;
+  const progress = useMemo(() => {
+    if (s.mode !== 'words') return null;
     const done = target.slice(0, typing.snapshot.cursor).split(' ').filter(Boolean).length;
-    return `${Math.min(modeCfg.words, done)}/${modeCfg.words}`;
-  }, [mode, target, typing.snapshot.cursor, modeCfg.words]);
+    return `${Math.min(s.wordsValue, done)}/${s.wordsValue}`;
+  }, [s.mode, s.wordsValue, target, typing.snapshot.cursor]);
 
   const liveWpm = toSpeedUnit(typing.snapshot.wpm, s.speedUnit);
 
@@ -158,24 +169,52 @@ export function MobilePage() {
 
       <MobileSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      {/* mode chips */}
-      <div className="shrink-0 flex items-center justify-center gap-1.5 px-4 py-2">
-        {MODES.map((m) => {
-          const on = m.id === mode;
-          return (
-            <button
-              key={m.id}
-              onClick={() => setMode(m.id)}
-              className="px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors"
-              style={{
-                color: on ? 'rgb(var(--paper))' : 'rgb(var(--ink-soft))',
-                background: on ? 'rgb(var(--accent))' : 'rgb(var(--ink) / 0.06)',
-              }}
-            >
-              {m.label(lang)}
-            </button>
-          );
-        })}
+      {/* mode selector — a category row, then a contextual length row for
+          time/words only, so the phone matches desktop without crowding */}
+      <div className="shrink-0 px-3 py-2 space-y-1.5">
+        <div className="flex items-center justify-center gap-1 overflow-x-auto no-scrollbar">
+          {MODES.map((m) => {
+            const on = s.mode === m;
+            return (
+              <button
+                key={m}
+                onClick={() => s.setMode(m)}
+                className="shrink-0 px-3 py-1.5 rounded-full text-[13px] font-medium lowercase transition-colors"
+                style={{
+                  color: on ? 'rgb(var(--paper))' : 'rgb(var(--ink-soft))',
+                  background: on ? 'rgb(var(--ink))' : 'rgb(var(--ink) / 0.06)',
+                }}
+              >
+                {t(lang, m)}
+              </button>
+            );
+          })}
+        </div>
+
+        {(s.mode === 'time' || s.mode === 'words') && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center gap-1"
+          >
+            {(s.mode === 'time' ? TIME_VALUES : WORD_VALUES).map((v) => {
+              const on = s.mode === 'time' ? s.timeValue === v : s.wordsValue === v;
+              return (
+                <button
+                  key={v}
+                  onClick={() => (s.mode === 'time' ? s.setTimeValue(v) : s.setWordsValue(v))}
+                  className="px-3.5 py-1 rounded-full text-[13px] font-medium tabular-nums transition-colors"
+                  style={{
+                    color: on ? 'rgb(var(--paper))' : 'rgb(var(--ink-soft))',
+                    background: on ? 'rgb(var(--accent))' : 'rgb(var(--ink) / 0.06)',
+                  }}
+                >
+                  {v}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
       </div>
 
       {/* live readout */}
@@ -183,8 +222,8 @@ export function MobilePage() {
         className="shrink-0 flex items-center justify-between px-5 h-8 font-mono text-[13px]"
         style={{ color: 'rgb(var(--ink-soft))' }}
       >
-        <span className="tabular-nums">
-          {typing.remaining != null ? (
+        <span className="tabular-nums truncate pr-3">
+          {timeLimit != null && typing.remaining != null ? (
             <span
               className="font-display font-semibold"
               style={{
@@ -194,12 +233,16 @@ export function MobilePage() {
             >
               {typing.remaining}s
             </span>
+          ) : source ? (
+            <span className="italic font-display block truncate" style={{ fontSize: '0.95rem' }}>
+              {source.title}
+            </span>
           ) : (
-            progressWords
+            progress
           )}
         </span>
         {typing.phase !== 'ready' && (
-          <span className="tabular-nums">
+          <span className="tabular-nums shrink-0">
             {liveWpm} <span style={{ color: 'rgb(var(--ink-faint))' }}>{s.speedUnit}</span>
           </span>
         )}
@@ -268,7 +311,7 @@ export function MobilePage() {
 
                   {verdict && (
                     <p className="mt-4 text-[13px] px-2" style={{ color: 'rgb(var(--ink-soft))' }}>
-                      {verdictText(verdict, lang, modeKey(mode), s.speedUnit, result.wpm)}
+                      {verdictText(verdict, lang, modeLabel(s), s.speedUnit, result.wpm)}
                     </p>
                   )}
 
