@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { letterValue, wordChips } from './letterValues';
 import {
+  afterWord,
   crossedMilestone,
   halveMult,
   isFast,
   multIncrement,
   tensionTier,
   wordChipTotal,
+  wordEndAt,
   wordGain,
   wordWpm,
 } from './scoring';
@@ -108,5 +110,38 @@ describe('tensionTier', () => {
     expect(tensionTier(6)).toBe(2);
     expect(tensionTier(10)).toBe(3);
     expect(tensionTier(16)).toBe(4);
+  });
+});
+
+describe('leaving a word early', () => {
+  // "ink rush now" — spaces at 3 and 8
+  const stream = 'ink rush now';
+
+  it('finds the space that ends the current word', () => {
+    expect(wordEndAt(stream, 0)).toBe(3);
+    expect(wordEndAt(stream, 2)).toBe(3);
+    expect(wordEndAt(stream, 4)).toBe(8);
+  });
+
+  it('treats the last word as ending at the end of the stream', () => {
+    expect(wordEndAt(stream, 9)).toBe(stream.length);
+  });
+
+  it('lands past the space, on the first letter of the next word', () => {
+    expect(afterWord(stream, 0)).toBe(4);
+    expect(stream[afterWord(stream, 0)]).toBe('r');
+    expect(afterWord(stream, 5)).toBe(9);
+    expect(stream[afterWord(stream, 5)]).toBe('n');
+  });
+
+  it('never runs past the end of the stream', () => {
+    expect(afterWord(stream, 9)).toBe(stream.length);
+    expect(afterWord(stream, stream.length)).toBe(stream.length);
+  });
+
+  it('steps over a space the cursor is already sitting on', () => {
+    // Nothing left of the word, so there is nothing to abandon: the caller
+    // checks `wordEndAt <= cursor` and lets the space be typed normally.
+    expect(wordEndAt(stream, 3)).toBe(3);
   });
 });

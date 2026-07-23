@@ -449,6 +449,97 @@ Until the env keys exist it is hidden on **every** device by design — nothing 
 - **Bundle weight** — the Supabase SDK loads eagerly (Header → AccountMenu → store → client).
   Could lazy-load the whole account layer to keep the typing page featherweight (~+150 kB gzip).
 - Rename/username edit exists on desktop; mobile sheet only shows sign-out (add rename if wanted).
+## v3 ROADMAP — from the user's list of 2026-07-22 (agreed, not yet built)
+Six ideas from the user, assessed rather than accepted wholesale. Recommended order below;
+the reasoning is kept because it is the kind of thing that gets re-argued later.
+
+### A. Caret flicker — FIXED ✅
+**Diagnosed:** `index.css:136` `caretPulse` fades the caret 1 → 0.35 → 1 on a 1.1 s loop and
+runs **continuously while focused**, never suppressed during typing. Typing fast means the
+caret is mid-fade *and* mid-spring-flight between letters at once → reads as flicker.
+**Fixed:** the caret only pulses once typing has stopped (`REST_AFTER_MS = 900`, reset on every
+cursor move). Practice only — the arcade caret never had a pulse, which is why the arcade never
+flickered.
+
+### B. Release a broken word — DONE ✅
+Was: first mistake sets `wordDirty`, backspace is disabled, and **the player must still type
+out a word that can no longer score**. Dead time with no upside.
+**Not** "skip as a reward for failing" — that would soften the penalty the multiplier depends
+on. Instead: once broken, the word is *released*; you have already taken the hit and should not
+also be made to finish a corpse. The **Quick Quill** skip stays a distinct, proactive power
+(dodge a word you have not broken yet). Two different powers, both earn their place.
+
+**What "smooth" turned out to require**, beyond the jump itself:
+- **A 220 ms grace window** where keystrokes are swallowed. Without it the feature actively
+  *hurts*: at 100 wpm a character lands every ~120 ms, so a fast typist has two keys already
+  committed to the word we just took away. Letting them land would break the next word too —
+  one mistake cascading into a second. Swallowed keys count as neither hits nor mistakes.
+- **The abandoned letters stay on screen, struck through in faded red**, so the jump reads as a
+  consequence rather than a glitch.
+- **No new sound.** `crack()`, the red flash and the shake already fire on the same keystroke;
+  a second cue 0 ms later would be mush.
+- **Never released on the run's last mistake** — the run ends, rather than yanking the player
+  forward into a stream they can no longer type.
+- Word-boundary math extracted to `wordEndAt` / `afterWord` in `scoring.ts`, shared with the
+  Quick Quill skip, **5 new tests**. The off-by-one around the space (landing *on* it rather
+  than past it) silently ruins the next word and would not have been caught by eye.
+
+### B2. Melodies play the whole piece — DONE ✅
+Asked for alongside A and B. The built-in tunes were 30–52-note fragments that looped before
+arriving anywhere. Now **62–89 notes each**: full phrase structure, second sections and real
+endings — Ode to Joy has all four phrases including the B section, Für Elise reaches the
+C-major middle and returns, Canon in D gets the running-quaver variation, Symphony No. 5 drives
+its motif through the whole rising sequence. Sirocco (the original) gained a second half up a
+fourth plus an Andalusian cadence home. *Twinkle stayed at 42 — already the complete song.*
+
+Cost of roughly doubling every tune: **+0.4 kB gzip.** Still nothing licensed; everything
+shipped remains public domain.
+
+### C. Responsive pass — all PC screen sizes
+Overdue. Hardcoded sizing in `TypingArea` (`height: 10.5rem`, `maxWidth: 52rem`) does nothing
+for 1440p or a 13" laptop. Straightforward, high payoff.
+
+### D. Pixel-art intro — also closes audit #1
+The real fix for "no orientation on landing", the worst finding in the audit.
+**Hard rule: not GIFs.** We already have this bug (audit #16 — the 1.2 MB jungle that pops in).
+Pixel art is the cheapest art form there is as a small spritesheet or canvas draw, and one of
+the most expensive as exported animated GIFs. Target ~30 kB, 60 fps, never blocking first
+paint. Shown once, remembered, skippable on any key — a mandatory intro on the fifth visit is
+a tax.
+
+### E. Accounts + leaderboards (day / week / month, top X%) — biggest, last
+User's instinct that they do not want a heavy user DB is **correct, and achievable**:
+**Supabase** — Postgres with Discord + Google OAuth built in, free tier, no server to run.
+Two tables: `profiles`, `scores`.
+
+**The catch that decides whether this is worth building: a public typing leaderboard attracts
+fake scores.** Anyone can POST "300 wpm" from devtools. Monkeytype runs real anti-cheat and
+still fights it. Naive leaderboard → top spots are bots → feature is worse than absent.
+**Mitigation, budgeted as part of the feature, not later polish:** submit the keystroke timing
+log with each run and validate server-side (reject inhuman consistency, impossible intervals,
+runs with no plausible rhythm). Does not make cheating impossible; makes it annoying, which is
+enough at this scale. **Day/week/month scoping is itself a defence** — a fake score pollutes
+one week, then evaporates.
+
+**"Top X%" is the strongest idea in the list** and should not be treated as a sub-feature of
+the leaderboard: "68 wpm" means nothing, "faster than 82% of runs this week" means something,
+it is cheap once the data exists, and it rewards *everyone* rather than only the ten people
+fast enough to reach a top-100 board.
+
+Privacy: users pick a display name. Never auto-publish someone's Discord handle.
+
+### F. Mobile — split the question honestly
+- **Chrome responsive everywhere** (menus, settings, results, history, intro): yes.
+- **Practice on a phone:** workable with real fixes — `autocorrect=off`, `autocapitalize=none`,
+  virtual-keyboard viewport handling.
+- **Arcade on a phone: no, and say so.** Ink Rush needs sustained fast typing; on thumbs it
+  would feel broken, and a broken arcade costs more than an honest "this one wants a keyboard".
+- Thumb-typed WPM measures a different skill from touch-typed WPM, so **mobile scores cannot
+  share a leaderboard with desktop scores** (interacts with E).
+
+**Recommended order:** A + B bundled (small, one is a live bug) → C → D (C and D together fix
+how the product reads on arrival) → E last: the only item adding a backend, ongoing cost and an
+abuse surface, and it deserves undivided attention.
 
 ## UX AUDIT — 16 findings (2026-07-22) — THE WORK QUEUE
 Full walkthrough as a new user. **Next task: work through these.**

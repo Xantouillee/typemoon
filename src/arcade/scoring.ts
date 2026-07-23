@@ -67,6 +67,26 @@ export function crossedMilestone(prev: number, next: number): number | null {
   return hit;
 }
 
+// ---- stream navigation -----------------------------------------------------
+/**
+ * Index of the space ending the word `cursor` sits in, or the end of the stream
+ * when it is the last word.
+ *
+ * Both ways of leaving a word early need this: the Quick Quill skip (proactive,
+ * on a cooldown) and the release of a word that has just broken. Shared because
+ * the off-by-one around the space is the exact mistake that would go unnoticed —
+ * landing *on* the space instead of past it silently ruins the next word.
+ */
+export function wordEndAt(stream: string, cursor: number): number {
+  const i = stream.indexOf(' ', cursor);
+  return i === -1 ? stream.length : i;
+}
+
+/** Where the cursor lands after abandoning the word at `cursor`: past its space. */
+export function afterWord(stream: string, cursor: number): number {
+  return Math.min(stream.length, wordEndAt(stream, cursor) + 1);
+}
+
 /** Visual tension tier (0..4) from the current multiplier — drives juice intensity. */
 export function tensionTier(mult: number): number {
   if (mult >= 16) return 4;
