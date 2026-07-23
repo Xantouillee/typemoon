@@ -14,7 +14,7 @@ import { useViewportHeight } from '../hooks/useViewportHeight';
 import { MobileTypingArea } from '../components/Mobile/MobileTypingArea';
 import { MobileSettings } from '../components/Mobile/MobileSettings';
 import { generateWords, cleanPassage } from '../engine/textGen';
-import { encodeScore, payloadFromResult } from '../lib/share';
+import { buildShareText, buildShareUrl, encodeScore, payloadFromResult } from '../lib/share';
 import {
   LANGUAGES,
   loadWords,
@@ -106,12 +106,26 @@ export function MobilePage() {
     typing.restart();
   }, [typing]);
 
-  // Share opens the score card page for this exact run — the sharer sees the
-  // same card recipients will, then shares from there.
-  const shareRun = useCallback(() => {
+  // Share stays inside the app: the native sheet (Messenger/Discord/WhatsApp…)
+  // opens over the run. Only when the browser has no share API do we fall back
+  // to the card page so the link can still be copied.
+  const shareRun = useCallback(async () => {
     if (!result) return;
     const val = s.mode === 'time' ? s.timeValue : s.mode === 'words' ? s.wordsValue : undefined;
-    navigate(`/score?${encodeScore(payloadFromResult(result, s.mode, val, lang))}`);
+    const payload = payloadFromResult(result, s.mode, val, lang);
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: 'Typemoon',
+          text: buildShareText(payload),
+          url: buildShareUrl(window.location.origin + import.meta.env.BASE_URL, payload),
+        });
+      } catch {
+        /* the user dismissed the sheet */
+      }
+      return;
+    }
+    navigate(`/score?${encodeScore(payload)}`);
   }, [result, s.mode, s.timeValue, s.wordsValue, lang, navigate]);
 
   const progress = useMemo(() => {

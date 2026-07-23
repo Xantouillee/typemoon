@@ -187,9 +187,8 @@ export function buildScoreCardSvg(p: ScorePayload): string {
   ${statRows}
   ${spark}
 
-  <!-- CTA -->
-  <text x="${pad}" y="${h - 44}" font-family="${SANS}" font-weight="700" font-size="24" fill="${C.ink}">beat this at <tspan fill="${C.accent}">xantouillee.github.io</tspan></text>
-  <text x="${w - pad}" y="${h - 44}" text-anchor="end" font-family="${DISPLAY}" font-style="italic" font-size="22" fill="${C.faint}">a typing practice for people who love words</text>
+  <!-- tagline -->
+  <text x="${w / 2}" y="${h - 46}" text-anchor="middle" font-family="${DISPLAY}" font-style="italic" font-size="25" fill="${C.faint}">a typing practice for people who love words</text>
 </svg>`;
 }
 
