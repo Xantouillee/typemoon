@@ -17,7 +17,9 @@ import {
 } from '../lib/content';
 import type { TestResult } from '../engine/types';
 import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
-import { submitScore, fetchPercentile, type Percentile } from '../lib/leaderboard';
+import { submitScore, fetchPercentile, fetchTodayRank, type Percentile } from '../lib/leaderboard';
+import { useDaily } from '../store/daily';
+import { DailyStrip, DailyStamp } from '../components/Chrome/DailyQuest';
 import { encodeScore, payloadFromResult } from '../lib/share';
 import { t } from '../i18n/strings';
 import { Backdrop, useBackdropClass } from '../components/Backdrop/Backdrop';
@@ -37,6 +39,7 @@ export function TestPage() {
   const [result, setResult] = useState<TestResult | null>(null);
   const [verdict, setVerdict] = useState<RunVerdict | null>(null);
   const [percentile, setPercentile] = useState<Percentile | null>(null);
+  const [dailyRank, setDailyRank] = useState<{ rank: number; total: number } | null>(null);
   const [nonce, setNonce] = useState(0);
 
   // Build the typing target whenever the mode/options change or "new test" fires.
@@ -79,22 +82,28 @@ export function TestPage() {
       setResult(r);
       setVerdict(null);
       setPercentile(null);
+      setDailyRank(null);
       // A failed run is not an attempt at the mode — it is a run that Expert or
       // Master stopped. Saving it would poison the average it would then be
       // ranked against, so it is neither recorded nor judged.
       if (r.charsTyped === 0 || r.failed) return;
       const mode = modeLabel(s);
+      const isDaily = s.mode === 'daily';
+      // A finished daily counts toward the streak — the heart of the quest loop.
+      if (isDaily) useDaily.getState().markDone();
       // rank first, save second — otherwise the run competes against itself
       void (async () => {
         setVerdict(await judgeRun(r.wpm, mode, lang));
         await saveRun(r, mode, lang);
       })();
       // The global board: read where the run stands *before* our own insert lands
-      // (so it is not measured against itself), then send it up. Both no-op when
-      // there is no backend or nobody is signed in.
+      // (so it is not measured against itself), then send it up. For the daily,
+      // read the standing *after* the insert so today's page rank includes it.
+      // All no-ops when there is no backend or nobody is signed in.
       void (async () => {
         setPercentile(await fetchPercentile(r.wpm, mode, lang));
         await submitScore(r, mode, lang);
+        if (isDaily) setDailyRank(await fetchTodayRank(mode, lang));
       })();
     },
     [s, lang],
@@ -168,6 +177,12 @@ export function TestPage() {
         <ModeBar />
       </div>
 
+      {s.mode === 'daily' && !result && (
+        <div className="relative z-10 mt-6">
+          <DailyStrip lang={lang} />
+        </div>
+      )}
+
       <div className="relative z-10 w-full max-w-3xl mt-14 min-h-[26rem]">
         <AnimatePresence mode="wait">
           {result ? (
@@ -177,6 +192,9 @@ export function TestPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              {s.mode === 'daily' && !result.failed && result.charsTyped > 0 && (
+                <DailyStamp lang={lang} rank={dailyRank} />
+              )}
               <Results
                 result={result}
                 lang={lang}

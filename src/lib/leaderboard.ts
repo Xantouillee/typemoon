@@ -128,6 +128,22 @@ export async function fetchPercentile(
 }
 
 /**
+ * A signed-in player's 1-based rank on today's board for a given mode/language,
+ * or null if they are not on it (not signed in, no run today, hidden, or no
+ * backend). Used by the daily quest to say "#3 on today's page" right after a run.
+ */
+export async function fetchTodayRank(
+  mode: string,
+  language: string,
+): Promise<{ rank: number; total: number } | null> {
+  const user = useAuth.getState().user;
+  if (!supabase || !user) return null;
+  const rows = await fetchLeaderboard('today', mode, language, 500);
+  const i = rows.findIndex((r) => r.user_id === user.id);
+  return i === -1 ? null : { rank: i + 1, total: rows.length };
+}
+
+/**
  * A signed-in player's own runs from the cloud, shaped like the local
  * `RunRecord`s so the very same `aggregate()` can draw their portrait — which is
  * how the History tab shows the same numbers on every device they sign in on.

@@ -26,6 +26,7 @@ import {
 import type { TestResult } from '../engine/types';
 import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
 import { submitScore, fetchPercentile, type Percentile } from '../lib/leaderboard';
+import { useDaily, useLiveStreak } from '../store/daily';
 import { ordinal, t, tf } from '../i18n/strings';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { avatarUrl, displayName, useAuth } from '../store/auth';
@@ -47,6 +48,7 @@ export function MobilePage() {
   const [verdict, setVerdict] = useState<RunVerdict | null>(null);
   const [percentile, setPercentile] = useState<Percentile | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const dailyStreak = useLiveStreak();
 
   const timeLimit = s.mode === 'time' ? s.timeValue : undefined;
 
@@ -88,6 +90,7 @@ export function MobilePage() {
       setPercentile(null);
       if (r.charsTyped === 0) return;
       const mk = modeLabel(s);
+      if (s.mode === 'daily') useDaily.getState().markDone();
       void (async () => {
         // rank before saving so the run does not compete with itself
         setVerdict(await judgeRun(r.wpm, mk, lang));
@@ -381,6 +384,11 @@ export function MobilePage() {
                   {percentile && (
                     <p className="mt-1.5 text-[13px] px-2 font-medium" style={{ color: 'rgb(var(--accent-2))' }}>
                       ↗ {tf(lang, 'percentile', { pct: percentile.pct, mode: modeLabel(s) })}
+                    </p>
+                  )}
+                  {s.mode === 'daily' && dailyStreak > 0 && (
+                    <p className="mt-2 text-[13px] px-2 font-semibold" style={{ color: 'rgb(var(--accent))' }}>
+                      🔥 {tf(lang, 'dailyStreakN', { n: dailyStreak })}
                     </p>
                   )}
 
