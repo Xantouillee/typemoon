@@ -5,6 +5,32 @@ craft of writing** — proofreader's-mark errors, a pen-nib caret, a colophon-st
 
 **Stack:** Vite · React 19 · TypeScript · Tailwind · Framer Motion · Zustand · Dexie (IndexedDB)
 
+## Latest session — 2026-07-23 (mobile + sharing) — LIVE on `main`
+Shipped and deployed to GitHub Pages (auto-deploys on push to `main`). All green:
+`tsc -b` clean · **117/117** tests · `vite build` ~209 kB gzip. Full detail in the
+`v3.0`/`v3.1` sections below.
+
+- **Touch-first mode at `/play`** — the desktop surface reads physical `keydown`,
+  which a soft keyboard can't drive, so mobile got a separate input road: a
+  transparent `<input>` over the words (tap the text → keyboard rises natively),
+  reconciled to the shared `TypingEngine` via `lib/../mobile/inputDiff.ts` (diff
+  old→new value into backspaces+inserts). Panel sized to `visualViewport.height`
+  so it sits above the keyboard. Touch visitors on `/` auto-redirect here once.
+- **Mobile settings sheet** (gear) — theme, sound+volume, the full voice picker
+  with previews, punctuation/numbers, text size; all on the shared store.
+- **Full mode parity** — phone drives the same `mode`/`timeValue`/`wordsValue`
+  store as desktop (time/words/quote/daily/zen), two-row selector.
+- **Share your score (v3.1)** — a run encodes into a `/#/score?…` link; recipient
+  sees a hand-built SVG card (`lib/share.ts`) + a "beat it" button that presets
+  the same run. Native share sheet on phone (stays in-app), copy link, download
+  PNG, and X/WhatsApp/Telegram/Reddit hand-offs. `/score` is a self-contained
+  sheet (no desktop nav). Generic OG image at `public/og.png` (a static host
+  can't do per-score previews — decided, not a bug).
+
+**Open next-steps** (not started): the UX-audit work queue further down still has
+#1, #9, #10 and the six minor items; a shared-link "ghost/target" during the
+recipient's run would deepen the share loop.
+
 ## v1 — solo, local-first (no backend, no accounts)
 
 - [x] **0. Project tracker** — this file + README
