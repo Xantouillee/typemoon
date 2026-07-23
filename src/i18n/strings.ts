@@ -86,6 +86,14 @@ const en: Dict = {
   theme: 'theme',
   volume: 'volume',
   textSize: 'text size',
+  share: 'share',
+  shareScore: 'share',
+  copyLink: 'copy link',
+  copied: 'copied',
+  downloadCard: 'download card',
+  beatIt: 'Try to beat it',
+  canYouBeat: 'Can you beat this?',
+  noScore: 'No score to show here.',
 };
 
 const fr: Dict = {
@@ -171,6 +179,14 @@ const fr: Dict = {
   theme: 'thème',
   volume: 'volume',
   textSize: 'taille du texte',
+  share: 'partager',
+  shareScore: 'partager',
+  copyLink: 'copier le lien',
+  copied: 'copié',
+  downloadCard: 'télécharger la carte',
+  beatIt: 'À toi de battre ça',
+  canYouBeat: 'Peux-tu faire mieux ?',
+  noScore: 'Aucun score à afficher ici.',
 };
 
 const es: Dict = {
@@ -256,6 +272,14 @@ const es: Dict = {
   theme: 'tema',
   volume: 'volumen',
   textSize: 'tamaño del texto',
+  share: 'compartir',
+  shareScore: 'compartir',
+  copyLink: 'copiar enlace',
+  copied: 'copiado',
+  downloadCard: 'descargar tarjeta',
+  beatIt: 'Supéralo',
+  canYouBeat: '¿Puedes superarlo?',
+  noScore: 'No hay puntuación que mostrar.',
 };
 
 const de: Dict = {
@@ -341,6 +365,14 @@ const de: Dict = {
   theme: 'Thema',
   volume: 'Lautstärke',
   textSize: 'Textgröße',
+  share: 'teilen',
+  shareScore: 'teilen',
+  copyLink: 'Link kopieren',
+  copied: 'kopiert',
+  downloadCard: 'Karte laden',
+  beatIt: 'Schlag das',
+  canYouBeat: 'Schaffst du mehr?',
+  noScore: 'Kein Ergebnis zum Anzeigen.',
 };
 
 /** Exported so a test can prove no language has silently fallen behind English. */

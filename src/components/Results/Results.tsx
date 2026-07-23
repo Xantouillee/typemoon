@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import type { Difficulty, TestResult } from '../../engine/types';
 import { CountUp } from './CountUp';
 import { WpmChart } from './WpmChart';
@@ -23,6 +24,8 @@ interface Props {
   onAgain: () => void;
   onNew: () => void;
   newLabel: string;
+  /** encoded score query for the share card page; omit to hide the share button */
+  shareParams?: string;
 }
 
 /**
@@ -160,6 +163,7 @@ export function Results({
   onAgain,
   onNew,
   newLabel,
+  shareParams,
 }: Props) {
   const slowest = [...result.perKey]
     .sort((a, b) => b.avgLatency + b.errors * 250 - (a.avgLatency + a.errors * 250))
@@ -229,6 +233,23 @@ export function Results({
         )}
 
         <motion.div variants={item} className="flex gap-3 ml-auto">
+          {shareParams && (
+            <Link
+              to={`/score?${shareParams}`}
+              className="font-sans text-sm font-semibold px-6 py-3 rounded-full transition-transform hover:-translate-y-0.5 inline-flex items-center gap-2"
+              style={{
+                background: 'transparent',
+                color: 'rgb(var(--accent))',
+                border: '1px solid rgb(var(--accent) / 0.4)',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                <path d="M12 3v13M12 3 8 7M12 3l4 4" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" strokeLinecap="round" />
+              </svg>
+              {t(lang, 'shareScore')}
+            </Link>
+          )}
           <button
             onClick={onAgain}
             className="font-sans text-sm font-semibold px-6 py-3 rounded-full transition-transform hover:-translate-y-0.5"

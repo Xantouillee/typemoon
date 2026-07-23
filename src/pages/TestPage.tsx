@@ -17,6 +17,7 @@ import {
 } from '../lib/content';
 import type { TestResult } from '../engine/types';
 import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
+import { encodeScore, payloadFromResult } from '../lib/share';
 import { t } from '../i18n/strings';
 import { Backdrop, useBackdropClass } from '../components/Backdrop/Backdrop';
 
@@ -173,6 +174,18 @@ export function TestPage() {
                 layout={layout}
                 verdict={verdict}
                 modeText={modeLabel(s)}
+                shareParams={
+                  result.failed || result.charsTyped === 0
+                    ? undefined
+                    : encodeScore(
+                        payloadFromResult(
+                          result,
+                          s.mode,
+                          s.mode === 'time' ? s.timeValue : s.mode === 'words' ? s.wordsValue : undefined,
+                          lang,
+                        ),
+                      )
+                }
                 failed={typing.snapshot.failed}
                 difficulty={s.difficulty}
                 onAgain={() => {

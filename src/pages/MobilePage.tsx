@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   useSettings,
   toSpeedUnit,
@@ -14,6 +14,7 @@ import { useViewportHeight } from '../hooks/useViewportHeight';
 import { MobileTypingArea } from '../components/Mobile/MobileTypingArea';
 import { MobileSettings } from '../components/Mobile/MobileSettings';
 import { generateWords, cleanPassage } from '../engine/textGen';
+import { encodeScore, payloadFromResult } from '../lib/share';
 import {
   LANGUAGES,
   loadWords,
@@ -33,6 +34,7 @@ export function MobilePage() {
   const s = useSettings();
   const lang = s.language;
   const appHeight = useViewportHeight();
+  const navigate = useNavigate();
 
   const [target, setTarget] = useState('');
   const [source, setSource] = useState<Passage | null>(null);
@@ -103,6 +105,14 @@ export function MobilePage() {
     setVerdict(null);
     typing.restart();
   }, [typing]);
+
+  // Share opens the score card page for this exact run — the sharer sees the
+  // same card recipients will, then shares from there.
+  const shareRun = useCallback(() => {
+    if (!result) return;
+    const val = s.mode === 'time' ? s.timeValue : s.mode === 'words' ? s.wordsValue : undefined;
+    navigate(`/score?${encodeScore(payloadFromResult(result, s.mode, val, lang))}`);
+  }, [result, s.mode, s.timeValue, s.wordsValue, lang, navigate]);
 
   const progress = useMemo(() => {
     if (s.mode !== 'words') return null;
@@ -331,6 +341,18 @@ export function MobilePage() {
                       {t(lang, 'newTest')}
                     </button>
                   </div>
+
+                  <button
+                    onClick={shareRun}
+                    className="mt-3 px-6 py-2.5 rounded-full text-sm font-semibold inline-flex items-center gap-2"
+                    style={{
+                      background: 'transparent',
+                      color: 'rgb(var(--accent))',
+                      border: '1px solid rgb(var(--accent) / 0.4)',
+                    }}
+                  >
+                    <IconShareSmall /> {t(lang, 'shareScore')}
+                  </button>
                 </div>
               </motion.div>
             )}
@@ -445,6 +467,14 @@ function IconSoundOff() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
       <path d="M4 9v6h4l5 4V5L8 9H4Z" strokeLinejoin="round" />
       <path d="M16 9.5 21 15M21 9.5 16 15" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconShareSmall() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+      <path d="M12 3v13M12 3 8 7M12 3l4 4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" strokeLinecap="round" />
     </svg>
   );
 }

@@ -349,6 +349,30 @@ Follow-ups (same track, pending sign-off):
 
 Gates: `tsc -b` clean · **107/107** tests · `vite build` ~205 kB gzip.
 
+## v3.1 — share your score — BUILT (pending sign-off)
+A backend-free share loop: a run encodes into a hash-route URL, the recipient
+opens a slick card and a "beat it" button drops them into the exact same run.
+
+- [x] **`lib/share.ts`** (pure, **10 tests**) — encode/decode a score into a
+      compact query string; `buildScoreCardSvg()` draws the signature Ink-on-Cream
+      card (hero WPM, accuracy/consistency/time, a seismograph sparkline from the
+      run's series, wordmark, "beat this at …" CTA). Self-contained SVG so it both
+      renders on-screen with the real fonts and rasterises to PNG for download.
+- [x] **`/score` landing** — the card + a loud "Try to beat it" that sets the
+      shared mode/length/language and sends the visitor into a run (→ `/play` on a
+      phone, `/` on desktop). This is the loop.
+- [x] **`ShareBar`** — the native share sheet when the browser has it (covers
+      Messenger/Discord/WhatsApp in one tap on a phone), a universal copy-link, a
+      PNG "download card", and one-click hand-offs to X / WhatsApp / Telegram /
+      Reddit. Wired into both the mobile results overlay and the desktop Results.
+- [x] **Open Graph / Twitter** meta + a generated `public/og.png`. A static host
+      can't render a *per-score* preview (the hash never reaches the server), so
+      pasted links show one polished generic card; the personalised card is the
+      in-app one people post directly. Decision, not a bug.
+- [x] Failed/empty runs don't get a share button — nothing to brag about.
+
+Gates: `tsc -b` clean · **117/117** tests · `vite build` ~209 kB gzip.
+
 ## UX AUDIT — 16 findings (2026-07-22) — THE WORK QUEUE
 Full walkthrough as a new user. **Next task: work through these.**
 User's stated priority = readability and a slick, self-evident experience.

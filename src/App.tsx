@@ -6,6 +6,7 @@ import { StatsPage } from './pages/StatsPage';
 import { ArcadePage } from './pages/ArcadePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MobilePage } from './pages/MobilePage';
+import { ScorePage } from './pages/ScorePage';
 import { useSettings } from './store/settings';
 import { t } from './i18n/strings';
 
@@ -54,6 +55,7 @@ export default function App() {
               <Route path="/history" element={<StatsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/play" element={<MobilePage />} />
+              <Route path="/score" element={<ScorePage />} />
             </Routes>
           </main>
           <footer className="py-6 text-center text-[11px] font-sans" style={{ color: 'rgb(var(--ink-faint))' }}>

@@ -148,6 +148,15 @@ body::before {
   display: none;
 }
 
+/* the shared score card scales to its container and keeps a soft page shadow */
+.score-card svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 30px 70px -45px rgb(var(--ink)), 0 0 0 1px rgb(var(--ink) / 0.06);
+}
+
 /* small caps label helper */
 .eyebrow {
   font-family: 'Hanken Grotesk', sans-serif;
