@@ -459,6 +459,26 @@ Until the env keys exist it is hidden on **every** device by design — nothing 
 - **Bundle weight** — the Supabase SDK loads eagerly (Header → AccountMenu → store → client).
   Could lazy-load the whole account layer to keep the typing page featherweight (~+150 kB gzip).
 - Rename/username edit exists on desktop; mobile sheet only shows sign-out (add rename if wanted).
+
+## v4.1 — percentile + leaderboard privacy — SHIPPED (2026-07-23)
+Two small features on top of the live board, both verified against the real Supabase project.
+
+- [x] **"Faster than X% of runs"** — a `run_percentile(wpm, mode, language, since)` SQL function
+      returns the share of recorded runs (same mode + language) that were slower, plus the sample
+      it measured against. Read in `onFinish` **before** the run's own insert lands (so it is never
+      measured against itself), shown under the verdict on desktop + mobile results, all four
+      languages. Hidden until `MIN_PERCENTILE_SAMPLE` (5) comparable runs exist, so "faster than
+      100%" of one run never appears. All-time window for now (biggest steady sample while the
+      field is young); trivially switchable to weekly later. Degrades to nothing with no backend.
+      The point: turns the board's data into a line **every** player gets, not just the fast few.
+- [x] **Show me on the leaderboard** toggle — a `profiles.visible` flag (default true), a switch
+      in the account menu (desktop) and the mobile settings sheet. `get_leaderboard` joins on
+      `p.visible`, so opting out drops your **named row** — but your runs still feed the anonymous
+      percentile, so hiding costs nothing. Optimistic toggle, reverts on write failure. Opt-OUT by
+      default (visible unless you turn it off); flip the column default for opt-in if wanted.
+- [x] **Schema** grew `run_percentile`, the `visible` column (+ idempotent `alter`), and the
+      `p.visible` filter — all applied to the live DB and re-verified with direct RPC calls.
+
 ## v3 ROADMAP — from the user's list of 2026-07-22 (agreed, not yet built)
 Six ideas from the user, assessed rather than accepted wholesale. Recommended order below;
 the reasoning is kept because it is the kind of thing that gets re-argued later.
