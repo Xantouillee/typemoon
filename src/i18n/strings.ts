@@ -83,6 +83,9 @@ const en: Dict = {
   tapToResume: 'Tap to resume',
   newWords: 'New words',
   mobileTitle: 'Type',
+  theme: 'theme',
+  volume: 'volume',
+  textSize: 'text size',
 };
 
 const fr: Dict = {
@@ -165,6 +168,9 @@ const fr: Dict = {
   tapToResume: 'Touchez pour reprendre',
   newWords: 'Nouveaux mots',
   mobileTitle: 'Taper',
+  theme: 'thème',
+  volume: 'volume',
+  textSize: 'taille du texte',
 };
 
 const es: Dict = {
@@ -247,6 +253,9 @@ const es: Dict = {
   tapToResume: 'Toca para continuar',
   newWords: 'Nuevas palabras',
   mobileTitle: 'Escribir',
+  theme: 'tema',
+  volume: 'volumen',
+  textSize: 'tamaño del texto',
 };
 
 const de: Dict = {
@@ -329,6 +338,9 @@ const de: Dict = {
   tapToResume: 'Zum Fortfahren tippen',
   newWords: 'Neue Wörter',
   mobileTitle: 'Tippen',
+  theme: 'Thema',
+  volume: 'Lautstärke',
+  textSize: 'Textgröße',
 };
 
 /** Exported so a test can prove no language has silently fallen behind English. */

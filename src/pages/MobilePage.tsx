@@ -5,6 +5,7 @@ import { useSettings, toSpeedUnit } from '../store/settings';
 import { useMobileTyping } from '../hooks/useMobileTyping';
 import { useViewportHeight } from '../hooks/useViewportHeight';
 import { MobileTypingArea } from '../components/Mobile/MobileTypingArea';
+import { MobileSettings } from '../components/Mobile/MobileSettings';
 import { generateWords } from '../engine/textGen';
 import { LANGUAGES, loadWords } from '../lib/content';
 import type { TestResult } from '../engine/types';
@@ -37,6 +38,7 @@ export function MobilePage() {
   const [nonce, setNonce] = useState(0);
   const [result, setResult] = useState<TestResult | null>(null);
   const [verdict, setVerdict] = useState<RunVerdict | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const modeCfg = useMemo(() => MODES.find((m) => m.id === mode)!, [mode]);
 
@@ -108,22 +110,6 @@ export function MobilePage() {
         color: 'rgb(var(--ink))',
       }}
     >
-      {/* Off-screen field that actually receives the soft-keyboard input. Kept
-          16px so iOS does not zoom on focus, and stripped of every autocorrect
-          affordance so what you type is what the engine scores. */}
-      <input
-        {...typing.inputProps}
-        type="text"
-        inputMode="text"
-        autoCapitalize="off"
-        autoCorrect="off"
-        autoComplete="off"
-        spellCheck={false}
-        aria-label={t(lang, 'mobileTitle')}
-        className="absolute opacity-0 pointer-events-none"
-        style={{ bottom: 0, left: 0, height: 1, width: 1, fontSize: 16, border: 0, padding: 0 }}
-      />
-
       {/* top bar */}
       <div className="shrink-0 flex items-center justify-between px-4 pt-3 pb-1">
         <Link to="/" className="font-display font-black tracking-tight" style={{ fontSize: '1.15rem' }}>
@@ -159,8 +145,18 @@ export function MobilePage() {
           >
             {s.theme === 'dark' ? <IconSun /> : <IconMoon />}
           </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="grid place-items-center w-9 h-9 rounded-full"
+            style={{ color: 'rgb(var(--ink))' }}
+            aria-label={t(lang, 'settings')}
+          >
+            <IconGear />
+          </button>
         </div>
       </div>
+
+      <MobileSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* mode chips */}
       <div className="shrink-0 flex items-center justify-center gap-1.5 px-4 py-2">
@@ -212,13 +208,19 @@ export function MobilePage() {
       {/* the typing panel fills the space that is left above the keyboard */}
       <div className="flex-1 min-h-0 px-3 pb-2 relative">
         <div className="w-full h-full max-w-2xl mx-auto relative">
-          <MobileTypingArea snapshot={typing.snapshot} fontScale={s.fontSize} onTap={typing.start} />
+          <MobileTypingArea
+            snapshot={typing.snapshot}
+            inputProps={typing.inputProps}
+            fontScale={s.fontSize}
+            langLabel={t(lang, 'mobileTitle')}
+          />
 
-          {/* keyboard dropped mid-run — invite a tap to bring it back */}
+          {/* keyboard dropped mid-run — a hint that a tap brings it back. It is
+              pointer-transparent so the tap lands on the input underneath and
+              the keyboard rises natively. */}
           {typing.phase === 'running' && !typing.keyboardUp && !result && (
-            <button
-              onClick={typing.start}
-              className="absolute inset-0 grid place-items-center rounded-2xl"
+            <div
+              className="absolute inset-0 grid place-items-center rounded-2xl pointer-events-none"
               style={{ background: 'rgb(var(--paper) / 0.55)', backdropFilter: 'blur(2px)' }}
             >
               <span
@@ -227,7 +229,7 @@ export function MobilePage() {
               >
                 {t(lang, 'tapToResume')}
               </span>
-            </button>
+            </div>
           )}
 
           {/* results */}
@@ -400,6 +402,18 @@ function IconSoundOff() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
       <path d="M4 9v6h4l5 4V5L8 9H4Z" strokeLinejoin="round" />
       <path d="M16 9.5 21 15M21 9.5 16 15" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconGear() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="12" r="3.2" />
+      <path
+        d="M19.4 15a1.6 1.6 0 0 0 .32 1.77l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-1 1.47V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9.1 19.4a1.6 1.6 0 0 0-1.77.32l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.32-1.77l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.6 1.6 0 0 0 1.77.32H9a1.6 1.6 0 0 0 1-1.47V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.32 1.77V9a1.6 1.6 0 0 0 1.47 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.47 1Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

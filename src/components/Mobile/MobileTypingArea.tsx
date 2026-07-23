@@ -1,28 +1,29 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { EngineSnapshot } from '../../engine/types';
+import type { MobileTypingApi } from '../../hooks/useMobileTyping';
 
 interface Props {
   snapshot: EngineSnapshot;
+  /** the hidden-input handlers from useMobileTyping */
+  inputProps: MobileTypingApi['inputProps'];
   /** multiplier on the base type size */
   fontScale?: number;
-  /** raise the keyboard when the words are tapped */
-  onTap?: () => void;
+  langLabel?: string;
 }
 
 /**
- * The touch typing surface. Unlike the desktop `TypingArea` it does not float a
- * measured caret — on a phone a solid highlight under the current character
- * reads better and needs no pixel maths that a re-flow could invalidate. The
- * active line is kept in view by translating the text block, and the whole
- * surface is a big tap target that raises the keyboard.
+ * The touch typing surface. A transparent <input> is laid directly over the
+ * words, so tapping the text focuses a *real* form field and the phone raises
+ * its keyboard natively — no programmatic focus that a browser might ignore.
+ * The words render underneath; the active character carries a solid highlight
+ * (no measured caret to misfire on reflow), and the block scrolls to keep the
+ * current line in view.
  */
-export function MobileTypingArea({ snapshot, fontScale = 1, onTap }: Props) {
+export function MobileTypingArea({ snapshot, inputProps, fontScale = 1, langLabel }: Props) {
   const activeRef = useRef<HTMLSpanElement>(null);
   const [scroll, setScroll] = useState(0);
   const { target, states, cursor } = snapshot;
 
-  // Keep the character under the cursor pinned about a third of the way down the
-  // panel, so there is always a line of context above and several lines below.
   useLayoutEffect(() => {
     const el = activeRef.current;
     if (!el) return;
@@ -32,7 +33,6 @@ export function MobileTypingArea({ snapshot, fontScale = 1, onTap }: Props) {
 
   return (
     <div
-      onPointerDown={onTap}
       data-panel
       className="relative w-full h-full overflow-hidden rounded-2xl cursor-text select-none"
       style={{ padding: 'clamp(0.9rem, 4vw, 1.4rem)' }}
@@ -85,6 +85,23 @@ export function MobileTypingArea({ snapshot, fontScale = 1, onTap }: Props) {
           })}
         </p>
       </div>
+
+      {/* The real input, laid transparently over the words. Tapping the text
+          focuses it and the keyboard comes up on its own. 16px font stops iOS
+          from zooming; every autocorrect affordance is stripped so what you
+          type is what gets scored. */}
+      <input
+        {...inputProps}
+        type="text"
+        inputMode="text"
+        autoCapitalize="off"
+        autoCorrect="off"
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={langLabel}
+        className="absolute inset-0 w-full h-full m-0 p-0 bg-transparent border-0 outline-none"
+        style={{ color: 'transparent', caretColor: 'transparent', fontSize: 16, cursor: 'text' }}
+      />
     </div>
   );
 }
