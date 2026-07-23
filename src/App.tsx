@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, useLocation, useNavigate } from 'react-route
 import { Header } from './components/Chrome/Header';
 import { TestPage } from './pages/TestPage';
 import { StatsPage } from './pages/StatsPage';
+import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ArcadePage } from './pages/ArcadePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MobilePage } from './pages/MobilePage';
@@ -53,6 +54,7 @@ export default function App() {
               <Route path="/" element={<TestPage />} />
               <Route path="/arcade" element={<ArcadePage />} />
               <Route path="/history" element={<StatsPage />} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/play" element={<MobilePage />} />
               <Route path="/score" element={<ScorePage />} />

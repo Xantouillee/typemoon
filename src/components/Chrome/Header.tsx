@@ -3,6 +3,8 @@ import { LANGUAGES } from '../../lib/content';
 import { useSettings } from '../../store/settings';
 import { t } from '../../i18n/strings';
 import { SoundMenu } from './SoundMenu';
+import { AccountMenu } from './AccountMenu';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 function IconMoon() {
   return (
@@ -110,6 +112,18 @@ export function Header() {
         >
           {t(lang, 'history')}
         </Link>
+        {isSupabaseConfigured && (
+          <Link
+            to="/leaderboard"
+            className="px-3 py-1.5 rounded-full text-[13px] font-sans font-medium transition-colors"
+            style={{
+              color: loc.pathname === '/leaderboard' ? 'rgb(var(--ink))' : 'rgb(var(--ink-soft))',
+              background: loc.pathname === '/leaderboard' ? 'rgb(var(--ink) / 0.06)' : 'transparent',
+            }}
+          >
+            {t(lang, 'leaderboard')}
+          </Link>
+        )}
 
         <span className="w-px h-5 mx-1.5" style={{ background: 'rgb(var(--ink) / 0.12)' }} />
 
@@ -154,6 +168,8 @@ export function Header() {
         </Link>
 
         <SoundMenu />
+
+        <AccountMenu />
 
         <button
           onClick={s.toggleTheme}

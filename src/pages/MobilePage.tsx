@@ -25,6 +25,7 @@ import {
 } from '../lib/content';
 import type { TestResult } from '../engine/types';
 import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
+import { submitScore } from '../lib/leaderboard';
 import { ordinal, t, tf } from '../i18n/strings';
 
 // The same five modes the desktop offers, so the phone is at parity.
@@ -86,6 +87,7 @@ export function MobilePage() {
         setVerdict(await judgeRun(r.wpm, mk, lang));
         await saveRun(r, mk, lang);
       })();
+      void submitScore(r, mk, lang);
     },
     [s, lang],
   );

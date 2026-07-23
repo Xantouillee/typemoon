@@ -1,18 +1,43 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { getRuns, summarise, type RunRecord } from '../lib/db';
+import { getRuns, type RunRecord } from '../lib/db';
+import { aggregate, formatCount, formatDuration } from '../lib/aggregate';
+import { fetchMyRuns } from '../lib/leaderboard';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { displayName, useAuth } from '../store/auth';
 import { useSettings } from '../store/settings';
 import { t } from '../i18n/strings';
 
-function Tile({ label, value }: { label: string; value: React.ReactNode }) {
+function Tile({
+  label,
+  value,
+  unit,
+  accent = false,
+}: {
+  label: string;
+  value: React.ReactNode;
+  unit?: string;
+  accent?: boolean;
+}) {
   return (
     <div
       className="flex flex-col gap-2 rounded-xl p-5"
-      style={{ background: 'rgb(var(--ink) / 0.03)', border: '1px solid rgb(var(--ink) / 0.07)' }}
+      style={{
+        background: accent ? 'rgb(var(--accent) / 0.08)' : 'rgb(var(--ink) / 0.03)',
+        border: `1px solid rgb(var(--${accent ? 'accent' : 'ink'}) / 0.09)`,
+      }}
     >
       <span className="eyebrow">{label}</span>
-      <span className="font-display font-semibold leading-none" style={{ fontSize: '2.6rem', color: 'rgb(var(--ink))' }}>
+      <span
+        className="font-display font-semibold leading-none"
+        style={{ fontSize: '2.6rem', color: accent ? 'rgb(var(--accent))' : 'rgb(var(--ink))' }}
+      >
         {value}
+        {unit && (
+          <span className="ml-1 font-sans font-normal" style={{ fontSize: '0.9rem', color: 'rgb(var(--ink-faint))' }}>
+            {unit}
+          </span>
+        )}
       </span>
     </div>
   );
@@ -53,13 +78,22 @@ function Sparkline({ runs }: { runs: RunRecord[] }) {
 
 export function StatsPage() {
   const lang = useSettings((s) => s.language);
+  const { status, user, profile } = useAuth();
   const [runs, setRuns] = useState<RunRecord[] | null>(null);
 
+  // Signed in, the portrait is drawn from the cloud so it follows you between
+  // devices; otherwise it is the runs saved in this browser.
+  const synced = status === 'signed-in';
   useEffect(() => {
-    void getRuns().then(setRuns);
-  }, []);
+    let alive = true;
+    const load = synced ? fetchMyRuns() : getRuns();
+    void load.then((r) => alive && setRuns(r));
+    return () => {
+      alive = false;
+    };
+  }, [synced]);
 
-  const stats = useMemo(() => summarise(runs ?? []), [runs]);
+  const stats = useMemo(() => aggregate(runs ?? []), [runs]);
 
   if (runs && runs.length === 0) {
     return (
@@ -67,18 +101,44 @@ export function StatsPage() {
         <p className="font-display italic" style={{ fontSize: '1.4rem', color: 'rgb(var(--ink-soft))' }}>
           {t(lang, 'noHistory')}
         </p>
+        {isSupabaseConfigured && !synced && (
+          <p className="mt-4 text-sm font-sans" style={{ color: 'rgb(var(--ink-faint))' }}>
+            {t(lang, 'signInToSync')}
+          </p>
+        )}
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      {/* who this portrait belongs to, and whether it travels with you */}
+      <div className="flex items-baseline justify-between mb-6">
+        <h1 className="font-display font-semibold" style={{ fontSize: '1.4rem', color: 'rgb(var(--ink))' }}>
+          {synced ? displayName(user, profile) : t(lang, 'history')}
+        </h1>
+        {isSupabaseConfigured && (
+          <span className="text-[11px] font-sans" style={{ color: 'rgb(var(--ink-faint))' }}>
+            {synced ? `· ${t(lang, 'syncedDevices')}` : t(lang, 'signInToSync')}
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Tile label={t(lang, 'streak')} value={stats.currentStreak} unit={t(lang, 'days')} accent />
         <Tile label={t(lang, 'bestWpm')} value={stats.bestWpm} />
         <Tile label={t(lang, 'avgWpm')} value={stats.avgWpm} />
         <Tile label={t(lang, 'avgAcc')} value={<>{stats.avgAcc}%</>} />
-        <Tile label={t(lang, 'tests')} value={stats.total} />
+        <Tile label={t(lang, 'keysTapped')} value={formatCount(stats.totalChars)} />
+        <Tile label={t(lang, 'timeTyped')} value={formatDuration(stats.totalSeconds)} />
+        <Tile label={t(lang, 'tests')} value={stats.totalRuns} />
+        <Tile label={t(lang, 'daysActive')} value={stats.daysActive} />
       </div>
+
+      <p className="text-[12px] font-sans mb-10" style={{ color: 'rgb(var(--ink-faint))' }}>
+        {t(lang, 'longestStreak')}: {stats.longestStreak} {t(lang, 'days')}
+        {stats.favoriteMode && <> · {t(lang, 'favourite')}: {stats.favoriteMode}</>}
+      </p>
 
       {runs && runs.length >= 2 && (
         <div
@@ -93,8 +153,8 @@ export function StatsPage() {
       )}
 
       <div className="flex flex-col divide-y" style={{ borderColor: 'rgb(var(--ink) / 0.08)' }}>
-        {(runs ?? []).slice(0, 30).map((r) => (
-          <div key={r.id} className="flex items-center justify-between py-3 font-mono text-sm">
+        {(runs ?? []).slice(0, 30).map((r, i) => (
+          <div key={r.id ?? i} className="flex items-center justify-between py-3 font-mono text-sm">
             <span className="w-24" style={{ color: 'rgb(var(--ink))' }}>
               <span className="font-display font-semibold" style={{ fontSize: '1.1rem', color: 'rgb(var(--accent))' }}>{r.wpm}</span>
               <span className="ml-1" style={{ color: 'rgb(var(--ink-faint))' }}>{t(lang, 'wpm')}</span>

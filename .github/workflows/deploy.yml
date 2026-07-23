@@ -37,8 +37,12 @@ jobs:
 
       - name: Build
         # Pages serves a project site from /<repo>/, so assets need that prefix.
+        # The Supabase vars are optional: add them as repo secrets to switch the
+        # leaderboard on, leave them unset and the site builds without accounts.
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: npx vite build
 
       # Pages must already be enabled on the repo with "GitHub Actions" as the

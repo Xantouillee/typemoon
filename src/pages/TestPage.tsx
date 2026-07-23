@@ -17,6 +17,7 @@ import {
 } from '../lib/content';
 import type { TestResult } from '../engine/types';
 import { judgeRun, saveRun, type RunVerdict } from '../lib/db';
+import { submitScore } from '../lib/leaderboard';
 import { encodeScore, payloadFromResult } from '../lib/share';
 import { t } from '../i18n/strings';
 import { Backdrop, useBackdropClass } from '../components/Backdrop/Backdrop';
@@ -86,6 +87,8 @@ export function TestPage() {
         setVerdict(await judgeRun(r.wpm, mode, lang));
         await saveRun(r, mode, lang);
       })();
+      // and, if signed in, send it up for the global board (no-op otherwise)
+      void submitScore(r, mode, lang);
     },
     [s, lang],
   );

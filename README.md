@@ -18,7 +18,10 @@ of writing**:
 - 🔊 Optional synthesised typewriter feedback.
 
 Everything runs in your browser. **No account, no server, no tracking** — your history is
-saved locally via IndexedDB.
+saved locally via IndexedDB. Sign-in is entirely optional: connect a free Supabase project
+and you unlock **Google/GitHub accounts, cloud-synced stats, and a global leaderboard**
+(day / week / month / all-time) — all still served from the same static GitHub Pages site.
+See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) to switch it on.
 
 ## Modes
 `time` · `words` · `quote` · `daily page` · `zen`, with punctuation & numbers toggles.
@@ -44,6 +47,9 @@ npx tsx scripts/build-daily-pool.ts
 ## Roadmap
 - **v2** — real-time head-to-head *VS* races (and/or racing a recorded "ghost").
 - **v3** — optional accounts, cloud-synced history, and global/daily leaderboards.
+  *(Accounts, cross-device stats and the global leaderboard have landed — see
+  [SUPABASE_SETUP.md](./SUPABASE_SETUP.md); server-side score validation is the
+  next step for a fully competitive board.)*
 
 ---
 Passages are sourced from [Project Gutenberg](https://www.gutenberg.org/) and are in the public domain.
