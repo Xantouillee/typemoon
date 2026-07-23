@@ -4,6 +4,40 @@ A slick typing-speed website with a literary soul. Design metaphor: **ink, paper
 craft of writing** — proofreader's-mark errors, a pen-nib caret, a colophon-style results reveal.
 
 **Stack:** Vite · React 19 · TypeScript · Tailwind · Framer Motion · Zustand · Dexie (IndexedDB)
+· Supabase (Postgres + Auth, live). Gates: `tsc -b` clean · **143** tests · `vite build` ok.
+
+---
+
+## ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ Status board  (~85%)
+
+```
+Core solo experience   ████████████████████  done + signed off
+Arcade / Ink Rush      ████████████████████  built (visual sign-off pending)
+16→22 keyboard voices  ████████████████████  built (sign-off pending)
+Accounts + leaderboard ████████████████████  LIVE (Supabase wired)
+Percentile / privacy   ████████████████████  live
+Daily quest (streak)   ████████████████████  live
+Auto-growing content   ████████████████████  cron shipped (see repo setting ⚠)
+Responsive pass (all PC)███████░░░░░░░░░░░░░  started, stashed  ← NEXT
+Pixel-art intro        ░░░░░░░░░░░░░░░░░░░░  not started
+Anti-cheat on scores   ░░░░░░░░░░░░░░░░░░░░  not started
+```
+
+### ▶ NEXT STEPS (in priority order)
+1. **Responsive pass** (v3 item C) — fluid type/column/keyboard from a 13" laptop to 4K, and a
+   vertical rhythm that keeps the keyboard in view on short screens. **WIP is `git stash`ed**
+   (`stash^{/wip responsive tokens}`); tokens already added to `index.css`. Redo needs to account
+   for the mobile components + remote `index.css` added since. *High visual payoff before sharing.*
+2. **Enable the content cron** — repo *Settings → Actions → General → Workflow permissions →
+   Read and write*, so `refresh-passages.yml` can push. One-time, ~30s.
+3. **Live-site secrets** (if not done) — add `SUPABASE_URL` / `SUPABASE_ANON_KEY` repo secrets +
+   re-run the deploy, so accounts/leaderboard show on `xantouillee.github.io/typemoon/`.
+4. **Anti-cheat** — scores POST straight from the browser; move the insert behind a Supabase Edge
+   Function that re-validates a run before the board goes wider. Schema is ready.
+5. **Pixel-art intro** (v3 item D) — closes the worst UX finding (no orientation on landing).
+6. **A few Spanish daily titles** — the `es` pool is thin (8 passages).
+
+---
 
 ## v1 — solo, local-first (no backend, no accounts)
 
