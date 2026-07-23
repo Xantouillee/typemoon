@@ -478,6 +478,28 @@ Two small features on top of the live board, both verified against the real Supa
       default (visible unless you turn it off); flip the column default for opt-in if wanted.
 - [x] **Schema** grew `run_percentile`, the `visible` column (+ idempotent `alter`), and the
       `p.visible` filter — all applied to the live DB and re-verified with direct RPC calls.
+- [x] **Share card** now carries the percentile (a gold "FASTER THAN X% OF RUNS" line, drawn
+      arrow so it rasterises without a web font), threaded from desktop + mobile results.
+
+## v4.2 — daily quest (return-hook) — SHIPPED (2026-07-23)
+Turns the daily page from "type today's passage" into a reason to come back. No new schema —
+reuses the leaderboard (`mode='daily'` + `today`).
+
+- [x] **`lib/daily.ts`** (pure, **9 tests**) + **`store/daily.ts`** — a local-calendar-day streak
+      that grows on consecutive days, restarts after a gap, tracks a best, and reads as broken
+      once a day is missed (`liveStreak`). Kept out of the settings store (progress ≠ preference).
+- [x] **`DailyStrip`** above the daily typing surface — live streak, a "start a streak" nudge,
+      a done-today check. **`DailyStamp`** on results — the streak earned, a keep-going / come-back
+      line, and, signed in, **"#N on today's page"** via `fetchTodayRank`. Mobile shows the streak.
+- [x] A **hand-drawn flame** (no emoji tofu) in the ink/paper palette. Translated EN/FR/ES/DE.
+
+**Next (agreed order):** B — the auto-content cron (a scheduled GitHub Action re-running
+`build-daily-pool.ts` to grow `pool.json`), then the stashed responsive pass.
+
+## Also fixed (2026-07-23)
+- **Spam-crackle** — fast typing summed overlapping notes past 1.0 and the destination
+  hard-clipped. Added a `DynamicsCompressor` limiter on the master bus (`lib/sound.ts`).
+- Removed `cœur` from the French word list.
 
 ## v3 ROADMAP — from the user's list of 2026-07-22 (agreed, not yet built)
 Six ideas from the user, assessed rather than accepted wholesale. Recommended order below;
