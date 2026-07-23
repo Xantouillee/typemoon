@@ -100,6 +100,22 @@ create policy "a user inserts only their own scores"
   on public.scores for insert with check (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- Table privileges.
+--
+-- RLS decides which *rows* a role may touch, but Postgres still needs a
+-- table-level GRANT before the request reaches the policy at all. Older Supabase
+-- projects granted these to anon/authenticated by default; newer ones don't, so
+-- without this every read is a bare "permission denied for table". Granted
+-- explicitly here so the schema stands on its own and does not rely on a
+-- project's default privileges. RLS above is what actually keeps writes honest.
+-- ─────────────────────────────────────────────────────────────────────────────
+grant usage on schema public to anon, authenticated;
+grant select on public.profiles to anon, authenticated;
+grant update on public.profiles to authenticated;
+grant select on public.scores to anon, authenticated;
+grant insert on public.scores to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- get_leaderboard: the best run per player within a window, fastest first.
 -- p_since NULL = all-time; p_mode / p_language NULL = don't filter that facet.
 -- ─────────────────────────────────────────────────────────────────────────────
