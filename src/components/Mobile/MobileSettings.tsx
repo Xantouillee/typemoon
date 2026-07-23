@@ -27,7 +27,7 @@ const THEME_SWATCH: Record<Theme, { paper: string; ink: string; accent: string }
 export function MobileSettings({ open, onClose }: Props) {
   const s = useSettings();
   const lang = s.language;
-  const { status, user, profile, signIn, signOut } = useAuth();
+  const { status, user, profile, signIn, signOut, setVisible } = useAuth();
   const signedIn = status === 'signed-in';
 
   return (
@@ -86,23 +86,49 @@ export function MobileSettings({ open, onClose }: Props) {
               {isSupabaseConfigured && (
                 <Section label={t(lang, 'account')}>
                   {signedIn ? (
-                    <div className="flex items-center gap-3">
-                      <MiniAvatar url={avatarUrl(user, profile)} name={displayName(user, profile)} />
-                      <div className="min-w-0 flex-1">
-                        <div className="font-display font-semibold truncate" style={{ color: 'rgb(var(--ink))' }}>
-                          {displayName(user, profile)}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-3">
+                        <MiniAvatar url={avatarUrl(user, profile)} name={displayName(user, profile)} />
+                        <div className="min-w-0 flex-1">
+                          <div className="font-display font-semibold truncate" style={{ color: 'rgb(var(--ink))' }}>
+                            {displayName(user, profile)}
+                          </div>
+                          <div className="text-[11px] truncate" style={{ color: 'rgb(var(--ink-faint))' }}>
+                            {user?.email}
+                          </div>
                         </div>
-                        <div className="text-[11px] truncate" style={{ color: 'rgb(var(--ink-faint))' }}>
-                          {user?.email}
-                        </div>
+                        <button
+                          onClick={() => void signOut()}
+                          className="px-3 py-1.5 rounded-full text-[12px] font-medium shrink-0"
+                          style={{ background: 'rgb(var(--ink) / 0.06)', color: 'rgb(var(--ink-soft))' }}
+                        >
+                          {t(lang, 'signOut')}
+                        </button>
                       </div>
-                      <button
-                        onClick={() => void signOut()}
-                        className="px-3 py-1.5 rounded-full text-[12px] font-medium shrink-0"
-                        style={{ background: 'rgb(var(--ink) / 0.06)', color: 'rgb(var(--ink-soft))' }}
-                      >
-                        {t(lang, 'signOut')}
-                      </button>
+                      {(() => {
+                        const visible = profile?.visible ?? true;
+                        return (
+                          <button
+                            onClick={() => void setVisible(!visible)}
+                            role="switch"
+                            aria-checked={visible}
+                            className="flex items-center justify-between gap-3 text-left"
+                          >
+                            <span className="text-[13px] font-medium" style={{ color: 'rgb(var(--ink-soft))' }}>
+                              {t(lang, 'showOnBoard')}
+                            </span>
+                            <span
+                              className="relative shrink-0 rounded-full transition-colors"
+                              style={{ width: 40, height: 24, background: visible ? 'rgb(var(--accent))' : 'rgb(var(--ink) / 0.18)' }}
+                            >
+                              <span
+                                className="absolute top-0.5 rounded-full transition-all"
+                                style={{ left: visible ? 18 : 2, width: 20, height: 20, background: 'rgb(var(--paper))' }}
+                              />
+                            </span>
+                          </button>
+                        );
+                      })()}
                     </div>
                   ) : (
                     <div className="space-y-2">

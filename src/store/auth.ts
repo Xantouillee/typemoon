@@ -10,6 +10,8 @@ export interface Profile {
   id: string;
   username: string;
   avatar_url: string | null;
+  /** whether this player appears on the public leaderboard (their runs still count anonymously). */
+  visible: boolean;
 }
 
 interface AuthState {
@@ -24,6 +26,8 @@ interface AuthState {
   signOut: () => Promise<void>;
   /** Rename the account; returns an error message, or null on success. */
   setUsername: (name: string) => Promise<string | null>;
+  /** Show or hide this player on the public leaderboard. Optimistic; reverts on failure. */
+  setVisible: (visible: boolean) => Promise<void>;
 }
 
 /** profile.username ?? provider name ?? email local-part ?? a gentle default. */
@@ -87,6 +91,20 @@ export const useAuth = create<AuthState>((set, get) => ({
     set((s) => ({ profile: s.profile ? { ...s.profile, username: trimmed } : s.profile }));
     return null;
   },
+
+  setVisible: async (visible) => {
+    const user = get().user;
+    if (!supabase || !user) return;
+    // Optimistic: flip it now so the switch feels instant, revert if the write fails.
+    set((s) => ({ profile: s.profile ? { ...s.profile, visible } : s.profile }));
+    const { error } = await supabase.from('profiles').update({ visible }).eq('id', user.id);
+    if (error) {
+      set((s) => ({
+        profile: s.profile ? { ...s.profile, visible: !visible } : s.profile,
+        error: error.message,
+      }));
+    }
+  },
 }));
 
 /** Read the row the sign-up trigger created for this user (best effort). */
@@ -94,7 +112,7 @@ async function loadProfile(user: User): Promise<Profile | null> {
   if (!supabase) return null;
   const { data } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url')
+    .select('id, username, avatar_url, visible')
     .eq('id', user.id)
     .maybeSingle();
   return (data as Profile | null) ?? null;

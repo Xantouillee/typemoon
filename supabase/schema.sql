@@ -11,8 +11,14 @@ create table if not exists public.profiles (
   id         uuid primary key references auth.users (id) on delete cascade,
   username   text unique not null,
   avatar_url text,
+  visible    boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+-- Opt-out of the public board. Added separately so re-running against a project
+-- whose profiles table predates the column still picks it up. A player's runs
+-- still count toward the anonymous percentile — this only hides their name/row.
+alter table public.profiles add column if not exists visible boolean not null default true;
 
 alter table public.profiles enable row level security;
 
@@ -143,7 +149,8 @@ as $$
       s.user_id, p.username, p.avatar_url, s.wpm, s.accuracy, s.mode, s.language, s.created_at
     from public.scores s
     join public.profiles p on p.id = s.user_id
-    where (p_since is null or s.created_at >= p_since)
+    where p.visible
+      and (p_since is null or s.created_at >= p_since)
       and (p_mode is null or s.mode = p_mode)
       and (p_language is null or s.language = p_language)
     order by s.user_id, s.wpm desc

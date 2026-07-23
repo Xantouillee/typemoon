@@ -57,7 +57,7 @@ function Avatar({ url, name, size = 26 }: { url: string | null; name: string; si
 
 export function AccountMenu() {
   const lang = useSettings((s) => s.language);
-  const { status, user, profile, error, signIn, signOut, setUsername } = useAuth();
+  const { status, user, profile, error, signIn, signOut, setUsername, setVisible } = useAuth();
   const [open, setOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState('');
@@ -207,6 +207,47 @@ export function AccountMenu() {
                     {t(lang, 'signOut')}
                   </button>
                 </div>
+
+                {/* Leaderboard privacy: opt out of the named board. Runs still
+                    feed the anonymous percentile, so hiding costs the player nothing. */}
+                {(() => {
+                  const visible = profile?.visible ?? true;
+                  return (
+                    <div className="flex flex-col gap-1.5 rounded-lg px-1 pt-1">
+                      <button
+                        onClick={() => void setVisible(!visible)}
+                        role="switch"
+                        aria-checked={visible}
+                        className="flex items-center justify-between gap-3 text-left"
+                      >
+                        <span className="text-[12.5px] font-sans font-medium" style={{ color: 'rgb(var(--ink-soft))' }}>
+                          {t(lang, 'showOnBoard')}
+                        </span>
+                        <span
+                          className="relative shrink-0 rounded-full transition-colors"
+                          style={{
+                            width: 34,
+                            height: 20,
+                            background: visible ? 'rgb(var(--accent))' : 'rgb(var(--ink) / 0.18)',
+                          }}
+                        >
+                          <motion.span
+                            className="absolute top-0.5 rounded-full"
+                            initial={false}
+                            animate={{ left: visible ? 16 : 2 }}
+                            transition={{ type: 'spring', stiffness: 700, damping: 40 }}
+                            style={{ width: 16, height: 16, background: 'rgb(var(--paper))' }}
+                          />
+                        </span>
+                      </button>
+                      {!visible && (
+                        <span className="text-[10.5px] font-sans leading-snug" style={{ color: 'rgb(var(--ink-faint))' }}>
+                          {t(lang, 'boardHiddenHint')}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <Link
                   to="/leaderboard"
